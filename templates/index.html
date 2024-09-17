@@ -10,15 +10,27 @@
     <div id="game-container">
         <div id="start-screen">
             <h1>Whack-a-Mole</h1>
-            <button id="start-button">Start Game</button>
+            <div id="difficulty-selection">
+                <h3>Select Difficulty:</h3>
+                <button id="easy-button" class="difficulty-button">Easy</button>
+                <button id="medium-button" class="difficulty-button">Medium</button>
+                <button id="hard-button" class="difficulty-button">Hard</button>
+            </div>
+            <button id="start-button" disabled>Start Game</button>
             <div id="instructions">
                 <h3>How to Play:</h3>
-                <p>Click on the moles as they appear to whack them! The game gets harder as time passes. Try to get the highest score possible before time runs out!</p>
+                <p>Click on the moles as they appear to whack them! The game gets harder as time passes. Try to reach the target score before time runs out!</p>
                 <h4>Mole Types:</h4>
                 <ul>
                     <li>Normal Mole: 1 point</li>
                     <li>Fast Mole (Red): 2 points</li>
                     <li>Golden Mole: 5 points</li>
+                </ul>
+                <h4>Target Scores:</h4>
+                <ul>
+                    <li>Easy: 30 points</li>
+                    <li>Medium: 50 points</li>
+                    <li>Hard: 80 points</li>
                 </ul>
             </div>
         </div>
@@ -28,7 +40,7 @@
             <canvas id="game-canvas"></canvas>
         </div>
         <div id="game-over-screen" style="display: none;">
-            <h2>Game Over</h2>
+            <h2 id="game-result">Game Over</h2>
             <p>Your score: <span id="final-score"></span></p>
             <button id="restart-button">Play Again</button>
         </div>

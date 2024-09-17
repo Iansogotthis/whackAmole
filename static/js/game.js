@@ -8,25 +8,27 @@ const restartButton = document.getElementById('restart-button');
 const scoreValue = document.getElementById('score-value');
 const timeValue = document.getElementById('time-value');
 const finalScore = document.getElementById('final-score');
+const gameResult = document.getElementById('game-result');
+const difficultyButtons = document.querySelectorAll('.difficulty-button');
 
 const CANVAS_WIDTH = 600;
 const CANVAS_HEIGHT = 400;
 const GRID_SIZE = 3;
 const HOLE_SIZE = 100;
 const MOLE_SIZE = 80;
-const GAME_DURATION = 45;
 
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
 let score = 0;
-let timeLeft = GAME_DURATION;
+let timeLeft;
 let gameInterval;
 let moles = [];
 let debugMode = false;
 let lastFrameTime = 0;
 let firstMoleAppeared = false;
 let lastMoleAppearance = 0;
+let selectedDifficulty = null;
 
 const holeImage = new Image();
 holeImage.src = '/static/assets/hole.svg';
@@ -51,21 +53,22 @@ function loadAudio(src) {
     });
 }
 
-let whackSound, moleAppearSound, gameOverSound;
+let whackSound, moleAppearSound, gameOverSound, winSound;
 
 Promise.all([
     loadAudio('/static/assets/whack.mp3'),
     loadAudio('/static/assets/mole_appear.mp3'),
-    loadAudio('/static/assets/game_over.mp3')
-]).then(([whack, moleAppear, gameOver]) => {
+    loadAudio('/static/assets/game_over.mp3'),
+    loadAudio('/static/assets/win.mp3')
+]).then(([whack, moleAppear, gameOver, win]) => {
     whackSound = whack;
     moleAppearSound = moleAppear;
     gameOverSound = gameOver;
+    winSound = win;
     console.log('All audio files loaded successfully');
 }).catch(error => {
     console.error('Error loading audio files:', error);
-    // Disable audio functionality if files fail to load
-    whackSound = moleAppearSound = gameOverSound = { play: () => {} };
+    whackSound = moleAppearSound = gameOverSound = winSound = { play: () => {} };
 });
 
 class Mole {
@@ -143,19 +146,14 @@ function drawMoles() {
 
 function updateMoles(deltaTime) {
     const now = Date.now();
-    const gameTime = GAME_DURATION - timeLeft;
-    let maxVisibleMoles, maxAppearDuration;
+    const gameTime = getDifficultySettings().gameDuration - timeLeft;
+    let { maxVisibleMoles, maxAppearDuration, moleSpawnChance } = getDifficultySettings();
 
-    // Determine the current game phase
-    if (gameTime <= 7) {
-        maxVisibleMoles = 1;
-        maxAppearDuration = 2000;
-    } else if (gameTime <= 16) {
-        maxVisibleMoles = 2;
-        maxAppearDuration = 1520;
-    } else {
-        maxVisibleMoles = 1;
-        maxAppearDuration = 920;
+    // Adjust difficulty based on game time
+    if (gameTime > getDifficultySettings().gameDuration / 2) {
+        maxVisibleMoles++;
+        maxAppearDuration *= 0.8;
+        moleSpawnChance *= 1.2;
     }
 
     const visibleMoles = moles.filter(mole => mole.visible).length;
@@ -164,8 +162,8 @@ function updateMoles(deltaTime) {
     if (visibleMoles < maxVisibleMoles) {
         const availableMoles = moles.filter(mole => !mole.visible);
         if (availableMoles.length > 0) {
-            const spawnChance = maxVisibleMoles - visibleMoles; // Higher chance to spawn when fewer moles are visible
-            if (Math.random() < spawnChance * 0.5) { // Adjust this multiplier to control spawn frequency
+            const spawnChance = (maxVisibleMoles - visibleMoles) * moleSpawnChance;
+            if (Math.random() < spawnChance) {
                 const randomMole = availableMoles[Math.floor(Math.random() * availableMoles.length)];
                 randomMole.visible = true;
                 randomMole.lastAppearance = now;
@@ -216,27 +214,67 @@ function gameLoop(currentTime) {
     timeLeft -= deltaTime / 1000;
     timeValue.textContent = Math.ceil(timeLeft);
 
-    if (timeLeft <= 0) {
-        endGame();
+    if (score >= getDifficultySettings().scoreToWin) {
+        winGame();
+    } else if (timeLeft <= 0) {
+        endGame(false);
     } else {
         if (debugMode) {
             ctx.fillStyle = 'black';
             ctx.font = '14px Arial';
-            ctx.fillText(`Game Time: ${(GAME_DURATION - timeLeft).toFixed(2)}s`, 10, 20);
+            ctx.fillText(`Game Time: ${(getDifficultySettings().gameDuration - timeLeft).toFixed(2)}s`, 10, 20);
             ctx.fillText(`FPS: ${Math.round(1000 / deltaTime)}`, 10, 40);
         }
         requestAnimationFrame(gameLoop);
     }
 }
 
+function getDifficultySettings() {
+    switch (selectedDifficulty) {
+        case 'easy':
+            return {
+                gameDuration: 60,
+                maxVisibleMoles: 2,
+                maxAppearDuration: 2000,
+                moleSpawnChance: 0.3,
+                scoreToWin: 30
+            };
+        case 'medium':
+            return {
+                gameDuration: 45,
+                maxVisibleMoles: 3,
+                maxAppearDuration: 1500,
+                moleSpawnChance: 0.5,
+                scoreToWin: 50
+            };
+        case 'hard':
+            return {
+                gameDuration: 30,
+                maxVisibleMoles: 4,
+                maxAppearDuration: 1000,
+                moleSpawnChance: 0.7,
+                scoreToWin: 80
+            };
+        default:
+            console.error('Invalid difficulty level');
+            return {
+                gameDuration: 45,
+                maxVisibleMoles: 3,
+                maxAppearDuration: 1500,
+                moleSpawnChance: 0.5,
+                scoreToWin: 50
+            };
+    }
+}
+
 function startGame() {
-    console.log('Game started');
+    console.log('Game started with difficulty:', selectedDifficulty);
     startScreen.style.display = 'none';
     gameScreen.style.display = 'block';
     gameOverScreen.style.display = 'none';
 
     score = 0;
-    timeLeft = GAME_DURATION;
+    timeLeft = getDifficultySettings().gameDuration;
     firstMoleAppeared = false;
     lastMoleAppearance = 0;
     scoreValue.textContent = score;
@@ -247,12 +285,26 @@ function startGame() {
     requestAnimationFrame(gameLoop);
 }
 
-function endGame() {
+function winGame() {
+    console.log('Game won');
+    gameScreen.style.display = 'none';
+    gameOverScreen.style.display = 'block';
+    gameResult.textContent = 'You Win!';
+    finalScore.textContent = score;
+    winSound.play();
+}
+
+function endGame(isWin) {
     console.log('Game ended');
     gameScreen.style.display = 'none';
     gameOverScreen.style.display = 'block';
+    gameResult.textContent = isWin ? 'You Win!' : 'Game Over';
     finalScore.textContent = score;
-    gameOverSound.play();
+    if (isWin) {
+        winSound.play();
+    } else {
+        gameOverSound.play();
+    }
 }
 
 canvas.addEventListener('click', (event) => {
@@ -272,8 +324,23 @@ canvas.addEventListener('click', (event) => {
     drawHammer(x, y);
 });
 
+difficultyButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        selectedDifficulty = button.id.split('-')[0];
+        difficultyButtons.forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+        startButton.disabled = false;
+    });
+});
+
 startButton.addEventListener('click', startGame);
-restartButton.addEventListener('click', startGame);
+restartButton.addEventListener('click', () => {
+    startScreen.style.display = 'block';
+    gameOverScreen.style.display = 'none';
+    startButton.disabled = true;
+    selectedDifficulty = null;
+    difficultyButtons.forEach(btn => btn.classList.remove('selected'));
+});
 
 // Toggle debug mode
 document.addEventListener('keydown', (event) => {
