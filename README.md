@@ -5,23 +5,9 @@ A web-based Whack-a-Mole game using Flask and JavaScript with HTML5 Canvas.
 ## Prerequisites
 
 - Python 3.7 or higher
-- PostgreSQL database (provided by Replit)
+- PostgreSQL database
 
-## Setup on Replit
-
-1. Fork this Repl to your Replit account.
-
-2. The required packages are already installed in the Replit environment.
-
-3. The database is automatically set up by Replit.
-
-## Running the Application on Replit
-
-1. Click the "Run" button at the top of the Replit interface.
-
-2. Once the server starts, you can play the game in the webview or open it in a new tab.
-
-## Local Setup (for development outside Replit)
+## Local Setup
 
 1. Clone the repository:
    ```
@@ -40,9 +26,10 @@ A web-based Whack-a-Mole game using Flask and JavaScript with HTML5 Canvas.
    pip install -r requirements.txt
    ```
 
-4. Set up your PostgreSQL database and update the DATABASE_URL environment variable:
+4. Create a `.env` file in the project root directory with the following content:
    ```
-   export DATABASE_URL=postgresql://username:password@localhost:5432/whack_a_mole
+   DATABASE_URL=postgresql://username:password@localhost:5432/whack_a_mole
+   SECRET_KEY=your_secret_key_here
    ```
    Replace `username`, `password`, and `whack_a_mole` with your PostgreSQL credentials and database name.
 
@@ -54,12 +41,14 @@ A web-based Whack-a-Mole game using Flask and JavaScript with HTML5 Canvas.
    >>> exit()
    ```
 
-6. Start the Flask development server:
+## Running the Application
+
+1. Start the Flask development server:
    ```
    python main.py
    ```
 
-7. Open a web browser and navigate to `http://localhost:5000` to play the game.
+2. Open a web browser and navigate to `http://localhost:5000` to play the game.
 
 ## Game Instructions
 
