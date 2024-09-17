@@ -429,7 +429,6 @@ function submitScore(score, difficulty) {
 }
 
 function showLeaderboard(difficulty) {
-    console.log('Fetching leaderboard for difficulty:', difficulty);
     fetch(`/leaderboard/${difficulty}`)
     .then(response => response.json())
     .then(data => {
@@ -446,7 +445,7 @@ function showLeaderboard(difficulty) {
                 ${data.map((score, index) => `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${score.player_name}</td>
+                        <td>${score.username}</td>
                         <td>${score.score}</td>
                         <td>${score.date}</td>
                     </tr>

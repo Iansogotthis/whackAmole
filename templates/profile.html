@@ -1,18 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - Whack-a-Mole</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div id="game-container">
+{% extends "base.html" %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+    <div id="profile">
         <h1>Profile</h1>
         <p>Username: {{ user.username }}</p>
         <p>Email: {{ user.email }}</p>
         
-        <h2>Your High Scores</h2>
+        <h2>Game Statistics</h2>
+        {% for difficulty in ['easy', 'medium', 'hard'] %}
+            <h3>{{ difficulty.capitalize() }} Mode</h3>
+            {% set stats = user_stats.get(difficulty, {'total_games': 0, 'avg_score': 0, 'highest_score': 0}) %}
+            <p>Total Games Played: {{ stats.total_games }}</p>
+            <p>Average Score: {{ "%.2f"|format(stats.avg_score) }}</p>
+            <p>Highest Score: {{ stats.highest_score }}</p>
+        {% endfor %}
+        
+        <h2>Recent High Scores</h2>
         {% if high_scores %}
             <table>
                 <tr>
@@ -31,9 +36,5 @@
         {% else %}
             <p>No high scores yet. Start playing to set some records!</p>
         {% endif %}
-        
-        <a href="{{ url_for('index') }}">Back to Game</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
     </div>
-</body>
-</html>
+{% endblock %}

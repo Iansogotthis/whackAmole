@@ -5,7 +5,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from config import Config
-from sqlalchemy import text
+from sqlalchemy import text, func
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -20,7 +20,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255))  # Increased length to 255
+    password_hash = db.Column(db.String(255))
     high_scores = db.relationship('HighScore', backref='user', lazy='dynamic')
 
     def set_password(self, password):
@@ -109,10 +109,26 @@ def logout():
 def profile():
     try:
         high_scores = HighScore.query.filter_by(user_id=current_user.id).order_by(HighScore.score.desc()).limit(10).all()
+        
+        user_stats = {}
+        for difficulty in ['easy', 'medium', 'hard']:
+            stats = db.session.query(
+                func.count(HighScore.id).label('total_games'),
+                func.avg(HighScore.score).label('avg_score'),
+                func.max(HighScore.score).label('highest_score')
+            ).filter_by(user_id=current_user.id, difficulty=difficulty).first()
+            
+            user_stats[difficulty] = {
+                'total_games': stats.total_games,
+                'avg_score': stats.avg_score or 0,
+                'highest_score': stats.highest_score or 0
+            }
+        
+        return render_template('profile.html', user=current_user, high_scores=high_scores, user_stats=user_stats)
     except Exception as e:
-        app.logger.error(f"Error fetching high scores: {str(e)}")
-        high_scores = []
-    return render_template('profile.html', user=current_user, high_scores=high_scores)
+        app.logger.error(f"Error fetching profile data: {str(e)}")
+        flash('An error occurred while loading your profile. Please try again later.')
+        return redirect(url_for('index'))
 
 @app.route("/submit_score", methods=['POST'])
 @login_required
@@ -133,11 +149,15 @@ def submit_score():
         app.logger.error(f"Error submitting score: {str(e)}")
         return jsonify({'error': 'Failed to submit score'}), 500
 
+@app.route("/leaderboard")
+def leaderboard():
+    return render_template('leaderboard.html')
+
 @app.route("/leaderboard/<difficulty>")
 def get_leaderboard(difficulty):
     app.logger.info(f"Fetching leaderboard for difficulty: {difficulty}")
     try:
-        scores = HighScore.query.filter_by(difficulty=difficulty).order_by(HighScore.score.desc()).limit(10).all()
+        scores = HighScore.query.filter_by(difficulty=difficulty).order_by(HighScore.score.desc()).limit(5).all()
         leaderboard = [score.to_dict() for score in scores]
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
         return jsonify(leaderboard)
@@ -149,7 +169,6 @@ def init_db():
     with app.app_context():
         db.drop_all()
         db.create_all()
-        # Check if the password_hash column needs to be altered
         db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255);'))
         db.session.commit()
 
