@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Whack-a-Mole</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="game-container">
+        <h1>Profile</h1>
+        <p>Username: {{ user.username }}</p>
+        <p>Email: {{ user.email }}</p>
+        
+        <h2>Your High Scores</h2>
+        {% if high_scores %}
+            <table>
+                <tr>
+                    <th>Difficulty</th>
+                    <th>Score</th>
+                    <th>Date</th>
+                </tr>
+                {% for score in high_scores %}
+                    <tr>
+                        <td>{{ score.difficulty }}</td>
+                        <td>{{ score.score }}</td>
+                        <td>{{ score.date }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No high scores yet. Start playing to set some records!</p>
+        {% endif %}
+        
+        <a href="{{ url_for('index') }}">Back to Game</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</body>
+</html>

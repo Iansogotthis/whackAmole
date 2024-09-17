@@ -124,3 +124,64 @@ h1, h2 {
 #leaderboard tr:hover {
     background-color: #ddd;
 }
+
+/* New styles for user authentication and profile */
+#user-actions {
+    margin-bottom: 20px;
+}
+
+#user-actions a {
+    margin-right: 10px;
+    text-decoration: none;
+    color: #4CAF50;
+}
+
+#user-actions a:hover {
+    text-decoration: underline;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+form div {
+    margin-bottom: 10px;
+}
+
+form label {
+    display: inline-block;
+    width: 100px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+form input {
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.flashes {
+    list-style-type: none;
+    padding: 0;
+    color: #ff0000;
+}
+
+#profile table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#profile th, #profile td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#profile th {
+    background-color: #4CAF50;
+    color: white;
+}

@@ -1,21 +1,37 @@
 import logging
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from config import Config
+from sqlalchemy import text
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 
 db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
-# High Score model
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255))  # Increased length to 255
+    high_scores = db.relationship('HighScore', backref='user', lazy='dynamic')
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 class HighScore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    player_name = db.Column(db.String(50), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     difficulty = db.Column(db.String(10), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -23,23 +39,89 @@ class HighScore(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'player_name': self.player_name,
+            'username': self.user.username,
             'score': self.score,
             'difficulty': self.difficulty,
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
         }
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
+@app.route("/register", methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username).first()
+        if user:
+            flash('Username already exists')
+            return redirect(url_for('register'))
+        
+        user = User.query.filter_by(email=email).first()
+        if user:
+            flash('Email already exists')
+            return redirect(url_for('register'))
+        
+        new_user = User(username=username, email=email)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash('Registration successful')
+        login_user(new_user)
+        next_page = request.args.get('next')
+        return redirect(next_page or url_for('index'))
+    
+    return render_template('register.html')
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        else:
+            flash('Invalid username or password')
+    
+    return render_template('login.html')
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route("/profile")
+@login_required
+def profile():
+    try:
+        high_scores = HighScore.query.filter_by(user_id=current_user.id).order_by(HighScore.score.desc()).limit(10).all()
+    except Exception as e:
+        app.logger.error(f"Error fetching high scores: {str(e)}")
+        high_scores = []
+    return render_template('profile.html', user=current_user, high_scores=high_scores)
+
 @app.route("/submit_score", methods=['POST'])
+@login_required
 def submit_score():
     data = request.json
     app.logger.info(f"Received score submission: {data}")
     try:
         new_score = HighScore(
-            player_name=data['player_name'],
+            user_id=current_user.id,
             score=data['score'],
             difficulty=data['difficulty']
         )
@@ -63,7 +145,14 @@ def get_leaderboard(difficulty):
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
 
-if __name__ == "__main__":
+def init_db():
     with app.app_context():
+        db.drop_all()
         db.create_all()
+        # Check if the password_hash column needs to be altered
+        db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255);'))
+        db.session.commit()
+
+if __name__ == "__main__":
+    init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
