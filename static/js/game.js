@@ -272,11 +272,7 @@ function startGame() {
 
 function winGame() {
     console.log('Game won');
-    gameScreen.style.display = 'none';
-    gameOverScreen.style.display = 'block';
-    gameResult.textContent = 'You Win!';
-    finalScore.textContent = score;
-    winSound.play();
+    endGame(true);
 }
 
 function endGame(isWin) {
@@ -290,7 +286,98 @@ function endGame(isWin) {
     } else {
         gameOverSound.play();
     }
+    
+    // Create a form for name input
+    const nameForm = document.createElement('form');
+    nameForm.innerHTML = `
+        <input type="text" id="playerNameInput" placeholder="Enter your name" required>
+        <button type="submit">Submit Score</button>
+    `;
+    document.getElementById('leaderboard').before(nameForm);
+
+    nameForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const playerName = document.getElementById('playerNameInput').value;
+        if (playerName) {
+            submitScore(playerName, score, selectedDifficulty);
+            nameForm.remove();
+            showLeaderboard(selectedDifficulty);
+        }
+    });
+
+    console.log('End game screen displayed, waiting for player name input');
 }
+
+function submitScore(playerName, score, difficulty) {
+    console.log('Submitting score:', { playerName, score, difficulty });
+    fetch('/submit_score', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            player_name: playerName,
+            score: score,
+            difficulty: difficulty
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Score submitted successfully:', data);
+        showLeaderboard(difficulty);
+    })
+    .catch((error) => {
+        console.error('Error submitting score:', error);
+        alert('There was an error submitting your score. Please try again.');
+    });
+}
+
+function showLeaderboard(difficulty) {
+    console.log('Fetching leaderboard for difficulty:', difficulty);
+    fetch(`/leaderboard/${difficulty}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Leaderboard data received:', data);
+        const leaderboardHTML = `
+            <h3>Leaderboard (${difficulty})</h3>
+            <table>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                    <th>Date</th>
+                </tr>
+                ${data.map((score, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${score.player_name}</td>
+                        <td>${score.score}</td>
+                        <td>${score.date}</td>
+                    </tr>
+                `).join('')}
+            </table>
+        `;
+        document.getElementById('leaderboard').innerHTML = leaderboardHTML;
+    })
+    .catch((error) => {
+        console.error('Error fetching leaderboard:', error);
+        document.getElementById('leaderboard').innerHTML = '<p>Error loading leaderboard. Please try again later.</p>';
+    });
+}
+
+function selectDifficulty(difficulty) {
+    console.log('Difficulty selected:', difficulty);
+    selectedDifficulty = difficulty;
+    difficultyButtons.forEach(btn => btn.classList.remove('selected'));
+    document.getElementById(`${difficulty}-button`).classList.add('selected');
+    startButton.disabled = false;
+}
+
+difficultyButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        selectDifficulty(button.id.split('-')[0]);
+    });
+});
 
 canvas.addEventListener('click', (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -307,15 +394,6 @@ canvas.addEventListener('click', (event) => {
     });
 
     drawHammer(x, y);
-});
-
-difficultyButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        selectedDifficulty = button.id.split('-')[0];
-        difficultyButtons.forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-        startButton.disabled = false;
-    });
 });
 
 startButton.addEventListener('click', startGame);
