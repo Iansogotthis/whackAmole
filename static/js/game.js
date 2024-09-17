@@ -34,6 +34,12 @@ holeImage.src = '/static/assets/hole.svg';
 const moleImage = new Image();
 moleImage.src = '/static/assets/mole.svg';
 
+const fastMoleImage = new Image();
+fastMoleImage.src = '/static/assets/fast_mole.svg';
+
+const goldenMoleImage = new Image();
+goldenMoleImage.src = '/static/assets/golden_mole.svg';
+
 const hammerImage = new Image();
 hammerImage.src = '/static/assets/hammer.svg';
 
@@ -68,24 +74,49 @@ class Mole {
         this.y = y;
         this.visible = false;
         this.lastAppearance = 0;
-        this.appearDuration = 2000;
+        this.setType('normal');
+    }
+
+    setType(type) {
+        this.type = type;
+        switch (type) {
+            case 'fast':
+                this.appearDuration = 1000;
+                this.points = 2;
+                this.image = fastMoleImage;
+                break;
+            case 'golden':
+                this.appearDuration = 750;
+                this.points = 5;
+                this.image = goldenMoleImage;
+                break;
+            default:
+                this.appearDuration = 2000;
+                this.points = 1;
+                this.image = moleImage;
+        }
     }
 
     draw() {
         ctx.drawImage(holeImage, this.x - HOLE_SIZE / 2, this.y - HOLE_SIZE / 2, HOLE_SIZE, HOLE_SIZE);
         if (this.visible) {
-            ctx.drawImage(moleImage, this.x - MOLE_SIZE / 2, this.y - MOLE_SIZE / 2, MOLE_SIZE, MOLE_SIZE);
+            ctx.drawImage(this.image, this.x - MOLE_SIZE / 2, this.y - MOLE_SIZE / 2, MOLE_SIZE, MOLE_SIZE);
         }
         if (debugMode) {
             ctx.fillStyle = this.visible ? 'green' : 'red';
             ctx.fillRect(this.x - 5, this.y - 5, 10, 10);
+            if (this.visible) {
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.fillText(this.type, this.x - 15, this.y + 30);
+            }
         }
     }
 
     hit() {
         if (this.visible) {
             this.visible = false;
-            score++;
+            score += this.points;
             scoreValue.textContent = score;
             whackSound.play();
             return true;
@@ -138,10 +169,20 @@ function updateMoles(deltaTime) {
                 const randomMole = availableMoles[Math.floor(Math.random() * availableMoles.length)];
                 randomMole.visible = true;
                 randomMole.lastAppearance = now;
-                randomMole.appearDuration = Math.min(maxAppearDuration, 1000 + Math.random() * 1000);
+
+                // Determine mole type based on probabilities
+                const typeRoll = Math.random();
+                if (typeRoll < 0.1) {
+                    randomMole.setType('golden');
+                } else if (typeRoll < 0.3) {
+                    randomMole.setType('fast');
+                } else {
+                    randomMole.setType('normal');
+                }
+
                 moleAppearSound.play();
                 lastMoleAppearance = now;
-                console.log(`Mole appeared at: (${randomMole.x}, ${randomMole.y}), Time: ${now}, Game Time: ${gameTime.toFixed(2)}s, Appear Duration: ${randomMole.appearDuration}ms`);
+                console.log(`${randomMole.type} Mole appeared at: (${randomMole.x}, ${randomMole.y}), Time: ${now}, Game Time: ${gameTime.toFixed(2)}s, Appear Duration: ${randomMole.appearDuration}ms`);
             }
         }
     }
@@ -150,7 +191,7 @@ function updateMoles(deltaTime) {
     moles.forEach(mole => {
         if (mole.visible && now - mole.lastAppearance > mole.appearDuration) {
             mole.visible = false;
-            console.log(`Mole disappeared at: (${mole.x}, ${mole.y}), Time: ${now}, Duration: ${now - mole.lastAppearance}ms`);
+            console.log(`${mole.type} Mole disappeared at: (${mole.x}, ${mole.y}), Time: ${now}, Duration: ${now - mole.lastAppearance}ms`);
         }
     });
 
@@ -223,7 +264,7 @@ canvas.addEventListener('click', (event) => {
         const distance = Math.sqrt((x - mole.x) ** 2 + (y - mole.y) ** 2);
         if (distance < MOLE_SIZE / 2) {
             if (mole.hit()) {
-                console.log(`Mole hit at: (${x}, ${y}), Score: ${score}`);
+                console.log(`${mole.type} Mole hit at: (${x}, ${y}), Score: ${score}`);
             }
         }
     });
@@ -244,5 +285,5 @@ document.addEventListener('keydown', (event) => {
 
 // Preload images
 window.onload = () => {
-    console.log('Images loaded:', holeImage.complete, moleImage.complete, hammerImage.complete);
+    console.log('Images loaded:', holeImage.complete, moleImage.complete, fastMoleImage.complete, goldenMoleImage.complete, hammerImage.complete);
 };
