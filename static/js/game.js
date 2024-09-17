@@ -29,6 +29,10 @@ let lastFrameTime = 0;
 let firstMoleAppeared = false;
 let lastMoleAppearance = 0;
 let selectedDifficulty = null;
+let powerUps = [];
+let activePowerUp = null;
+let powerUpDuration = 3000; // Changed from 5000 to 3000 (3 seconds)
+let lastPowerUpSpawn = 0;
 
 const holeImage = new Image();
 holeImage.src = '/static/assets/hole.svg';
@@ -70,6 +74,12 @@ Promise.all([
     console.error('Error loading audio files:', error);
     whackSound = moleAppearSound = gameOverSound = winSound = { play: () => {} };
 });
+
+function updateScore(points) {
+    const maxScore = 1000000; // Set a reasonable maximum score
+    score = Math.min(score + points, maxScore);
+    scoreValue.textContent = score;
+}
 
 class Mole {
     constructor(x, y) {
@@ -119,12 +129,35 @@ class Mole {
     hit() {
         if (this.visible) {
             this.visible = false;
-            score += this.points;
-            scoreValue.textContent = score;
+            updateScore(this.points);
             whackSound.play();
             return true;
         }
         return false;
+    }
+}
+
+class PowerUp {
+    constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.visible = true;
+        this.type = type;
+        this.size = 40;
+        this.appearDuration = 5000; // 5 seconds
+        this.lastAppearance = Date.now();
+    }
+
+    draw() {
+        ctx.fillStyle = this.type === 'hammer' ? 'red' : 'blue';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size / 2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.type === 'hammer' ? 'H' : 'F', this.x, this.y);
     }
 }
 
@@ -218,6 +251,63 @@ function updateMoles(deltaTime) {
     console.log(`Moles updated, visible moles: ${visibleMoles}, Game Time: ${gameTime.toFixed(2)}s, Max Visible: ${maxVisibleMoles}, Max Appear Duration: ${maxAppearDuration}ms`);
 }
 
+function updatePowerUps(now) {
+    powerUps = powerUps.filter(powerUp => now - powerUp.lastAppearance <= powerUp.appearDuration);
+
+    if (powerUps.length === 0 && now - lastPowerUpSpawn > 15000) {
+        const type = Math.random() < 0.5 ? 'hammer' : 'freeze';
+        const x = Math.random() * (CANVAS_WIDTH - 40) + 20;
+        const y = Math.random() * (CANVAS_HEIGHT - 40) + 20;
+        powerUps.push(new PowerUp(x, y, type));
+        lastPowerUpSpawn = now;
+    }
+
+    if (activePowerUp && now - activePowerUp.startTime > powerUpDuration) {
+        activePowerUp = null;
+    }
+}
+
+function drawPowerUps() {
+    powerUps.forEach(powerUp => powerUp.draw());
+}
+
+function collectPowerUp(x, y) {
+    const index = powerUps.findIndex(powerUp => {
+        const distance = Math.sqrt((x - powerUp.x) ** 2 + (y - powerUp.y) ** 2);
+        return distance < powerUp.size / 2;
+    });
+
+    if (index !== -1) {
+        const collectedPowerUp = powerUps[index];
+        powerUps.splice(index, 1);
+        activePowerUp = {
+            type: collectedPowerUp.type,
+            startTime: Date.now()
+        };
+        console.log(`Power-up collected: ${collectedPowerUp.type}`);
+    }
+}
+
+function applyPowerUpEffects() {
+    if (!activePowerUp) return;
+
+    if (activePowerUp.type === 'hammer') {
+        // Instead of doubling points, apply a more balanced effect
+        moles.forEach(mole => {
+            if (mole.visible) {
+                mole.points += 1; // Increase points by 1 instead of doubling
+            }
+        });
+    } else if (activePowerUp.type === 'freeze') {
+        // Keep the freeze effect as is
+        moles.forEach(mole => {
+            if (mole.visible) {
+                mole.appearDuration *= 1.5;
+            }
+        });
+    }
+}
+
 function drawHammer(x, y) {
     ctx.drawImage(hammerImage, x - 25, y - 25, 50, 50);
 }
@@ -231,7 +321,10 @@ function gameLoop(currentTime) {
 
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     updateMoles(deltaTime);
+    updatePowerUps(currentTime);
     drawMoles();
+    drawPowerUps();
+    applyPowerUpEffects();
 
     timeLeft -= deltaTime / 1000;
     timeValue.textContent = Math.ceil(timeLeft);
@@ -246,6 +339,9 @@ function gameLoop(currentTime) {
             ctx.font = '14px Arial';
             ctx.fillText(`Game Time: ${(getDifficultySettings().gameDuration - timeLeft).toFixed(2)}s`, 10, 20);
             ctx.fillText(`FPS: ${Math.round(1000 / deltaTime)}`, 10, 40);
+            if (activePowerUp) {
+                ctx.fillText(`Active Power-up: ${activePowerUp.type}`, 10, 60);
+            }
         }
         requestAnimationFrame(gameLoop);
     }
@@ -287,7 +383,6 @@ function endGame(isWin) {
         gameOverSound.play();
     }
     
-    // Create a form for name input
     const nameForm = document.createElement('form');
     nameForm.innerHTML = `
         <input type="text" id="playerNameInput" placeholder="Enter your name" required>
@@ -393,6 +488,7 @@ canvas.addEventListener('click', (event) => {
         }
     });
 
+    collectPowerUp(x, y);
     drawHammer(x, y);
 });
 
