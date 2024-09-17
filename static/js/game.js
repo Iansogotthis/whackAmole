@@ -144,31 +144,54 @@ function drawMoles() {
     moles.forEach(mole => mole.draw());
 }
 
+function getDifficultySettings(gameTime) {
+    switch (selectedDifficulty) {
+        case 'easy':
+            if (gameTime <= 7) {
+                return { maxVisibleMoles: 1, maxAppearDuration: 2000, scoreToWin: 30, gameDuration: 60 };
+            } else if (gameTime <= 16) {
+                return { maxVisibleMoles: 2, maxAppearDuration: 1520, scoreToWin: 30, gameDuration: 60 };
+            } else {
+                return { maxVisibleMoles: 1, maxAppearDuration: 920, scoreToWin: 30, gameDuration: 60 };
+            }
+        case 'medium':
+            if (gameTime <= 7) {
+                return { maxVisibleMoles: 1, maxAppearDuration: 1000, scoreToWin: 50, gameDuration: 45 };
+            } else if (gameTime <= 16) {
+                return { maxVisibleMoles: 2, maxAppearDuration: 1000, scoreToWin: 50, gameDuration: 45 };
+            } else {
+                return { maxVisibleMoles: 1, maxAppearDuration: 500, scoreToWin: 50, gameDuration: 45 };
+            }
+        case 'hard':
+            if (gameTime <= 4) {
+                return { maxVisibleMoles: 1, maxAppearDuration: 1500, scoreToWin: 80, gameDuration: 30 };
+            } else if (gameTime <= 14) {
+                return { maxVisibleMoles: 2, maxAppearDuration: 910, scoreToWin: 80, gameDuration: 30 };
+            } else {
+                return { maxVisibleMoles: 2, maxAppearDuration: 500, scoreToWin: 80, gameDuration: 30 };
+            }
+        default:
+            console.error('Invalid difficulty level');
+            return { maxVisibleMoles: 1, maxAppearDuration: 2000, scoreToWin: 30, gameDuration: 60 };
+    }
+}
+
 function updateMoles(deltaTime) {
     const now = Date.now();
     const gameTime = getDifficultySettings().gameDuration - timeLeft;
-    let { maxVisibleMoles, maxAppearDuration, moleSpawnChance } = getDifficultySettings();
-
-    // Adjust difficulty based on game time
-    if (gameTime > getDifficultySettings().gameDuration / 2) {
-        maxVisibleMoles++;
-        maxAppearDuration *= 0.8;
-        moleSpawnChance *= 1.2;
-    }
+    let { maxVisibleMoles, maxAppearDuration } = getDifficultySettings(gameTime);
 
     const visibleMoles = moles.filter(mole => mole.visible).length;
 
-    // Spawn new moles if there are fewer visible moles than the maximum allowed
     if (visibleMoles < maxVisibleMoles) {
         const availableMoles = moles.filter(mole => !mole.visible);
         if (availableMoles.length > 0) {
-            const spawnChance = (maxVisibleMoles - visibleMoles) * moleSpawnChance;
+            const spawnChance = (maxVisibleMoles - visibleMoles) * 0.2;
             if (Math.random() < spawnChance) {
                 const randomMole = availableMoles[Math.floor(Math.random() * availableMoles.length)];
                 randomMole.visible = true;
                 randomMole.lastAppearance = now;
 
-                // Determine mole type based on probabilities
                 const typeRoll = Math.random();
                 if (typeRoll < 0.1) {
                     randomMole.setType('golden');
@@ -185,9 +208,8 @@ function updateMoles(deltaTime) {
         }
     }
 
-    // Update existing moles
     moles.forEach(mole => {
-        if (mole.visible && now - mole.lastAppearance > mole.appearDuration) {
+        if (mole.visible && now - mole.lastAppearance > maxAppearDuration) {
             mole.visible = false;
             console.log(`${mole.type} Mole disappeared at: (${mole.x}, ${mole.y}), Time: ${now}, Duration: ${now - mole.lastAppearance}ms`);
         }
@@ -214,7 +236,7 @@ function gameLoop(currentTime) {
     timeLeft -= deltaTime / 1000;
     timeValue.textContent = Math.ceil(timeLeft);
 
-    if (score >= getDifficultySettings().scoreToWin) {
+    if (score >= getDifficultySettings(getDifficultySettings().gameDuration - timeLeft).scoreToWin) {
         winGame();
     } else if (timeLeft <= 0) {
         endGame(false);
@@ -229,44 +251,6 @@ function gameLoop(currentTime) {
     }
 }
 
-function getDifficultySettings() {
-    switch (selectedDifficulty) {
-        case 'easy':
-            return {
-                gameDuration: 60,
-                maxVisibleMoles: 2,
-                maxAppearDuration: 2000,
-                moleSpawnChance: 0.3,
-                scoreToWin: 30
-            };
-        case 'medium':
-            return {
-                gameDuration: 45,
-                maxVisibleMoles: 3,
-                maxAppearDuration: 1500,
-                moleSpawnChance: 0.5,
-                scoreToWin: 50
-            };
-        case 'hard':
-            return {
-                gameDuration: 30,
-                maxVisibleMoles: 4,
-                maxAppearDuration: 1000,
-                moleSpawnChance: 0.7,
-                scoreToWin: 80
-            };
-        default:
-            console.error('Invalid difficulty level');
-            return {
-                gameDuration: 45,
-                maxVisibleMoles: 3,
-                maxAppearDuration: 1500,
-                moleSpawnChance: 0.5,
-                scoreToWin: 50
-            };
-    }
-}
-
 function startGame() {
     console.log('Game started with difficulty:', selectedDifficulty);
     startScreen.style.display = 'none';
@@ -274,7 +258,8 @@ function startGame() {
     gameOverScreen.style.display = 'none';
 
     score = 0;
-    timeLeft = getDifficultySettings().gameDuration;
+    const difficultySettings = getDifficultySettings(0);
+    timeLeft = difficultySettings.gameDuration;
     firstMoleAppeared = false;
     lastMoleAppearance = 0;
     scoreValue.textContent = score;
@@ -342,7 +327,6 @@ restartButton.addEventListener('click', () => {
     difficultyButtons.forEach(btn => btn.classList.remove('selected'));
 });
 
-// Toggle debug mode
 document.addEventListener('keydown', (event) => {
     if (event.key === 'd' || event.key === 'D') {
         debugMode = !debugMode;
@@ -350,7 +334,6 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-// Preload images
 window.onload = () => {
     console.log('Images loaded:', holeImage.complete, moleImage.complete, fastMoleImage.complete, goldenMoleImage.complete, hammerImage.complete);
 };
