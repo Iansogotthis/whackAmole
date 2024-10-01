@@ -96,14 +96,14 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         user = User.query.filter_by(username=username).first()
-
+        
         if user and user.check_password(password):
             login_user(user)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('index'))
         else:
             flash('Invalid username or password')
-
+    
     return render_template('login.html')
 
 @app.route("/logout")
