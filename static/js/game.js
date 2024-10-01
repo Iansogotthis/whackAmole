@@ -346,11 +346,12 @@ function gameLoop(currentTime) {
 }
 
 function isUserLoggedIn() {
-    return document.querySelector('#user-actions span') !== null;
+    return document.body.classList.contains('logged-in');
 }
 
 function startGame() {
     if (!isUserLoggedIn()) {
+        alert('Please log in to play the game.');
         window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
         return;
     }

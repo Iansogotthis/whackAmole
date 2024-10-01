@@ -6,8 +6,8 @@
     <title>{% block title %}Whack-a-Mole{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-    <nav class = "navbar">
+<body class="{{ 'logged-in' if current_user.is_authenticated else '' }}">
+    <nav class="navbar">
         <ul>
             <li><a href="{{ url_for('index') }}">New Game</a></li>
             <li><a href="{{ url_for('leaderboard') }}">Leaderboard</a></li>
