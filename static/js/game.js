@@ -351,7 +351,6 @@ function isUserLoggedIn() {
 
 function startGame() {
     if (!isUserLoggedIn()) {
-        alert('Please log in to play the game.');
         window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
         return;
     }
