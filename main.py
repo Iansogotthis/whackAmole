@@ -20,7 +20,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(255))  # Increase length to 255
 
     def __init__(self, username, email):
         self.username = username
@@ -199,8 +199,8 @@ def get_leaderboard(difficulty):
 def init_db():
     with app.app_context():
         db.create_all()
-        # Check if the email column needs to be added
-        db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS email VARCHAR(120) UNIQUE;"))
+        # Check if the password_hash column needs to be altered
+        db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255);'))
         db.session.commit()
 
 if __name__ == "__main__":
