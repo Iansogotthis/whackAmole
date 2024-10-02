@@ -110,9 +110,10 @@ button:disabled {
     color: #333;
 }
 
-h1, h2 {
+h1, h2, h3 {
     color: #4CAF50;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 #instructions {
@@ -134,36 +135,9 @@ h1, h2 {
     animation: pop 0.3s ease-in-out;
 }
 
-#leaderboard {
-    margin-top: 20px;
-}
-
-#leaderboard table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#leaderboard th, #leaderboard td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-#leaderboard th {
-    background-color: #4CAF50;
-    color: white;
-}
-
-#leaderboard tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
-#leaderboard tr:hover {
-    background-color: #ddd;
-}
-
 #user-actions {
     margin-bottom: 20px;
+    text-align: center;
 }
 
 #user-actions a {
@@ -203,37 +177,168 @@ form input {
     list-style-type: none;
     padding: 0;
     color: #ff0000;
+    text-align: center;
 }
 
-#profile table {
-    margin-top: 20px;
+.container {
+    width: 80%;
+    margin: 20px auto;
+    overflow: hidden;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.stats-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    margin-bottom: 30px;
+}
+
+.stats-box {
+    flex-basis: calc(33.333% - 20px);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+#leaderboard table, #profile table {
     width: 100%;
     border-collapse: collapse;
+    margin: 20px auto;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    border-radius: 10px;
+    overflow: hidden;
 }
 
+#leaderboard th, #leaderboard td,
 #profile th, #profile td {
-    padding: 8px;
+    padding: 12px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-#profile th {
+#leaderboard th, #profile th {
     background-color: #4CAF50;
     color: white;
+    text-align: center;
+}
+
+#leaderboard tr:nth-child(even),
+#profile tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#leaderboard tr:hover,
+#profile tr:hover {
+    background-color: #ddd;
+}
+
+#difficulty-buttons {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#difficulty-buttons button {
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-radius: 5px;
+}
+
+#difficulty-buttons button:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
+
+#difficulty-buttons button.selected {
+    background-color: #2ecc71;
+    font-weight: bold;
+}
+
+.user-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.fancy-divider {
+    height: 2px;
+    background: linear-gradient(to right, transparent, #4CAF50, transparent);
+    margin: 30px 0;
+}
+
+.about-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.about-form textarea {
+    width: 80%;
+    max-width: 500px;
+    height: 100px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: none;
+}
+
+.about-form button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.about-form button:hover {
+    background-color: #45a049;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .stats-container {
+        flex-wrap: wrap;
+    }
+
+    .stats-box {
+        flex-basis: 100%;
+        margin-bottom: 20px;
+    }
 }
 
 @media only screen and (max-width: 600px) {
     body {
         font-size: 0.9em;
     }
-    #game-container {
+
+    .container, #game-container {
         width: 95%;
         padding: 10px;
     }
+
     .navbar ul {
         flex-direction: column;
         align-items: center;
     }
+
     .navbar li {
         margin: 10px 0;
     }
@@ -243,7 +348,8 @@ form input {
     body {
         font-size: 0.8em;
     }
-    #game-container {
+
+    .container, #game-container {
         width: 98%;
         padding: 5px;
     }

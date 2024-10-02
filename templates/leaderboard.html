@@ -3,6 +3,7 @@
 {% block title %}Leaderboard{% endblock %}
 
 {% block content %}
+<div class="container">
     <h1>Leaderboard</h1>
     <div id="difficulty-buttons">
         <button onclick="showLeaderboard('easy')">Easy</button>
@@ -10,37 +11,47 @@
         <button onclick="showLeaderboard('hard')">Hard</button>
     </div>
     <div id="leaderboard-content"></div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-    <script>
+<script>
     function showLeaderboard(difficulty) {
         fetch(`/leaderboard/${difficulty}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 let html = `<h2>${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Mode</h2>
                             <table>
-                                <tr>
-                                    <th>Rank</th>
-                                    <th>Player</th>
-                                    <th>Score</th>
-                                    <th>Date</th>
-                                </tr>`;
-                data.slice(0, 5).forEach((score, index) => {
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Player</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                data.forEach((score, index) => {
                     html += `<tr>
                                 <td>${index + 1}</td>
                                 <td>${score.username}</td>
                                 <td>${score.score}</td>
-                                <td>${score.date}</td>
                             </tr>`;
                 });
-                html += '</table>';
+                html += '</tbody></table>';
                 document.getElementById('leaderboard-content').innerHTML = html;
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error loading leaderboard:', error);
+                document.getElementById('leaderboard-content').innerHTML = 'Failed to load leaderboard. Please try again later.';
+            });
     }
 
-    // Show Easy leaderboard by default
+    // Show Easy leaderboard by default when the page loads
     showLeaderboard('easy');
-    </script>
+</script>
 {% endblock %}
