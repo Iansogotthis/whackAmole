@@ -215,6 +215,12 @@ def get_leaderboard(difficulty):
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
 
 
+@app.route("/start_game", methods=['POST'])
+@login_required
+def start_game():
+    return jsonify({'success': True, 'message': 'Game started successfully'})
+
+
 @app.context_processor
 def inject_user():
     return dict(user=current_user)

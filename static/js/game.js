@@ -345,33 +345,41 @@ function gameLoop(currentTime) {
     }
 }
 
-function isUserLoggedIn() {
-    return document.body.classList.contains('logged-in');
-}
-
 function startGame() {
-    if (!isUserLoggedIn()) {
-        alert('Please log in to play the game.');
-        window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
-        return;
-    }
+    fetch('/start_game', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Game started with difficulty:', selectedDifficulty);
+            startScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            gameOverScreen.style.display = 'none';
 
-    console.log('Game started with difficulty:', selectedDifficulty);
-    startScreen.style.display = 'none';
-    gameScreen.style.display = 'block';
-    gameOverScreen.style.display = 'none';
+            score = 0;
+            const difficultySettings = getDifficultySettings(0);
+            timeLeft = difficultySettings.gameDuration;
+            firstMoleAppeared = false;
+            lastMoleAppearance = 0;
+            scoreValue.textContent = score;
+            timeValue.textContent = Math.ceil(timeLeft);
 
-    score = 0;
-    const difficultySettings = getDifficultySettings(0);
-    timeLeft = difficultySettings.gameDuration;
-    firstMoleAppeared = false;
-    lastMoleAppearance = 0;
-    scoreValue.textContent = score;
-    timeValue.textContent = Math.ceil(timeLeft);
-
-    initializeMoles();
-    lastFrameTime = 0;
-    requestAnimationFrame(gameLoop);
+            initializeMoles();
+            lastFrameTime = 0;
+            requestAnimationFrame(gameLoop);
+        } else {
+            alert('Please log in to play the game.');
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('An error occurred while starting the game. Please try again.');
+    });
 }
 
 function winGame() {

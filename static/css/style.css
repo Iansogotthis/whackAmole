@@ -206,7 +206,7 @@ form input {
     box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
 }
 
-#leaderboard table, #profile table {
+#leaderboard-content table, #profile table {
     width: 100%;
     border-collapse: collapse;
     margin: 20px auto;
@@ -216,25 +216,59 @@ form input {
     overflow: hidden;
 }
 
-#leaderboard th, #leaderboard td,
+#leaderboard-content th, #leaderboard-content td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+}
+
+#leaderboard-content th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 2px solid #45a049;
+}
+
+#leaderboard-content tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#leaderboard-content tr:hover {
+    background-color: #ddd;
+}
+
+#leaderboard-content th:nth-child(1),
+#leaderboard-content td:nth-child(1) {
+    width: 20%;
+}
+
+#leaderboard-content th:nth-child(2),
+#leaderboard-content td:nth-child(2) {
+    width: 50%;
+}
+
+#leaderboard-content th:nth-child(3),
+#leaderboard-content td:nth-child(3) {
+    width: 30%;
+}
+
 #profile th, #profile td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #e0e0e0;
 }
 
-#leaderboard th, #profile th {
+#profile th {
     background-color: #4CAF50;
     color: white;
     text-align: center;
 }
 
-#leaderboard tr:nth-child(even),
 #profile tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
-#leaderboard tr:hover,
 #profile tr:hover {
     background-color: #ddd;
 }
