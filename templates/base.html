@@ -7,11 +7,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="{{ 'logged-in' if current_user.is_authenticated else '' }}">
-    {% if not current_user.is_authenticated %}
-    <div class="login-banner">
-        Please <a href="{{ url_for('login') }}">log in</a> or <a href="{{ url_for('register') }}">sign up</a> to play the game and save your scores!
-    </div>
-    {% endif %}
     <nav class="navbar">
         <ul>
             <li><a href="{{ url_for('index') }}">New Game</a></li>

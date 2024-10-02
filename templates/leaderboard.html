@@ -6,9 +6,9 @@
 <div class="container">
     <h1>Leaderboard</h1>
     <div id="difficulty-buttons">
-        <button class="difficulty-button selected" onclick="showLeaderboard('easy', this)">Easy</button>
-        <button class="difficulty-button" onclick="showLeaderboard('medium', this)">Medium</button>
-        <button class="difficulty-button" onclick="showLeaderboard('hard', this)">Hard</button>
+        <button onclick="showLeaderboard('easy')">Easy</button>
+        <button onclick="showLeaderboard('medium')">Medium</button>
+        <button onclick="showLeaderboard('hard')">Hard</button>
     </div>
     <div id="leaderboard-content"></div>
 </div>
@@ -16,11 +16,7 @@
 
 {% block scripts %}
 <script>
-    function showLeaderboard(difficulty, buttonElement) {
-        // Update selected button
-        document.querySelectorAll('.difficulty-button').forEach(btn => btn.classList.remove('selected'));
-        buttonElement.classList.add('selected');
-
+    function showLeaderboard(difficulty) {
         fetch(`/leaderboard/${difficulty}`)
             .then(response => {
                 if (!response.ok) {
@@ -30,16 +26,15 @@
             })
             .then(data => {
                 let html = `<h2>${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Mode</h2>
-                            <div class="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Player</th>
-                                            <th>Score</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>`;
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Player</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
                 data.forEach((score, index) => {
                     html += `<tr>
                                 <td>${index + 1}</td>
@@ -47,7 +42,7 @@
                                 <td>${score.score}</td>
                             </tr>`;
                 });
-                html += '</tbody></table></div>';
+                html += '</tbody></table>';
                 document.getElementById('leaderboard-content').innerHTML = html;
             })
             .catch(error => {
@@ -57,8 +52,6 @@
     }
 
     // Show Easy leaderboard by default when the page loads
-    document.addEventListener('DOMContentLoaded', () => {
-        showLeaderboard('easy', document.querySelector('.difficulty-button'));
-    });
+    showLeaderboard('easy');
 </script>
 {% endblock %}
