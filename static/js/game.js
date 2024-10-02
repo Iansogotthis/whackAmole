@@ -308,6 +308,10 @@ function applyPowerUpEffects() {
 
 function drawHammer(x, y) {
     ctx.drawImage(hammerImage, x - 25, y - 25, 50, 50);
+    
+    setTimeout(() => {
+        ctx.clearRect(x - 25, y - 25, 50, 50);
+    }, 100);
 }
 
 function gameLoop(currentTime) {
@@ -490,16 +494,19 @@ function selectDifficulty(difficulty) {
     startButton.disabled = false;
 }
 
-difficultyButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        selectDifficulty(button.id.split('-')[0]);
-    });
-});
-
-canvas.addEventListener('click', (event) => {
+function handleInteraction(event) {
+    event.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    let x, y;
+
+    if (event.type.startsWith('touch')) {
+        const touch = event.touches[0] || event.changedTouches[0];
+        x = touch.clientX - rect.left;
+        y = touch.clientY - rect.top;
+    } else {
+        x = event.clientX - rect.left;
+        y = event.clientY - rect.top;
+    }
 
     moles.forEach(mole => {
         const distance = Math.sqrt((x - mole.x) ** 2 + (y - mole.y) ** 2);
@@ -512,6 +519,19 @@ canvas.addEventListener('click', (event) => {
 
     collectPowerUp(x, y);
     drawHammer(x, y);
+}
+
+difficultyButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        selectDifficulty(button.id.split('-')[0]);
+    });
+});
+
+canvas.addEventListener('mousedown', handleInteraction);
+canvas.addEventListener('touchstart', handleInteraction);
+canvas.addEventListener('touchmove', handleInteraction);
+canvas.addEventListener('touchend', (event) => {
+    event.preventDefault();
 });
 
 startButton.addEventListener('click', startGame);
