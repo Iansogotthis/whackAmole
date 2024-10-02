@@ -23,6 +23,7 @@ except Exception as e:
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
@@ -38,6 +39,7 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
 
 class HighScore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -60,13 +62,16 @@ class HighScore(db.Model):
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
         }
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -74,28 +79,29 @@ def register():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
-        
+
         user = User.query.filter_by(username=username).first()
         if user:
             flash('Username already exists')
             return redirect(url_for('register'))
-        
+
         user = User.query.filter_by(email=email).first()
         if user:
             flash('Email already exists')
             return redirect(url_for('register'))
-        
+
         new_user = User(username=username, email=email)
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
-        
+
         flash('Registration successful')
         login_user(new_user)
         next_page = request.args.get('next')
         return redirect(next_page or url_for('index'))
-    
+
     return render_template('register.html')
+
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -113,34 +119,47 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
+
 @app.route("/profile")
 @login_required
 def profile():
     try:
         app.logger.info(f"Accessing profile for user: {current_user.username}")
-        high_scores = HighScore.query.filter_by(user_id=current_user.id).order_by(HighScore.score.desc()).first()
-        
+        high_scores = HighScore.query.filter_by(
+            user_id=current_user.id).order_by(HighScore.score.desc()).first()
+
         user_stats = {}
         for difficulty in ['easy', 'medium', 'hard']:
-            stats = db.session.query(func.max(HighScore.score).label('highest_score')).filter_by(
-                user_id=current_user.id, difficulty=difficulty).first()
-            user_stats[difficulty] = stats.highest_score if stats and stats.highest_score else 0
+            stats = db.session.query(
+                func.max(HighScore.score).label('highest_score')).filter_by(
+                    user_id=current_user.id, difficulty=difficulty).first()
+            user_stats[
+                difficulty] = stats.highest_score if stats and stats.highest_score else 0
 
-        app.logger.info(f"Profile data fetched successfully for user: {current_user.username}")
-        return render_template('profile.html',
-                               user=current_user,
-                               highest_score=high_scores.score if high_scores else 0,
-                               user_stats=user_stats)
+        app.logger.info(
+            f"Profile data fetched successfully for user: {current_user.username}"
+        )
+        return render_template(
+            'profile.html',
+            user=current_user,
+            highest_score=high_scores.score if high_scores else 0,
+            user_stats=user_stats)
     except Exception as e:
-        app.logger.error(f"Error fetching profile data for user {current_user.username}: {str(e)}")
-        flash('An error occurred while loading your profile. Please try again later.')
+        app.logger.error(
+            f"Error fetching profile data for user {current_user.username}: {str(e)}"
+        )
+        flash(
+            'An error occurred while loading your profile. Please try again later.'
+        )
         return redirect(url_for('index'))
+
 
 @app.route("/submit_score", methods=['POST'])
 @login_required
@@ -176,9 +195,11 @@ def submit_score():
         app.logger.error(f"Error submitting score: {str(e)}")
         return jsonify({'error': 'Failed to submit score'}), 500
 
+
 @app.route("/leaderboard")
 def leaderboard():
     return render_template('leaderboard.html')
+
 
 @app.route("/leaderboard/<difficulty>")
 def get_leaderboard(difficulty):
@@ -193,15 +214,21 @@ def get_leaderboard(difficulty):
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
 
+
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
 
+
 def init_db():
     with app.app_context():
         db.create_all()
-        db.session.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255);'))
+        db.session.execute(
+            text(
+                'ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255);'
+            ))
         db.session.commit()
+
 
 if __name__ == "__main__":
     init_db()

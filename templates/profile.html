@@ -4,7 +4,7 @@
 
 {% block content %}
 <div id="profile">
-    <h1>Welcome to "{{ user.username }}'s" Profile!!</h1>
+    <h1>Welcome to {{ user.username }}'s Profile</h1>
     
     <div id="general_data">
         <h2>General Info</h2>
@@ -18,7 +18,7 @@
     <div class="blurb">
         <h2>About Me</h2>
         <span id="me_form">
-            <textarea id="about_me" placeholder="Stuff about myself"></textarea>
+            <textarea id="about_me" placeholder="Share something about yourself..."></textarea>
             <button onclick="saveAboutMe()">Save</button>
         </span>
     </div>
@@ -26,9 +26,9 @@
     <div class="Leader_data">
         <h2>League Placement</h2>
         <ul>
-            <li>Highest Easy Score: {{ user_stats['easy'] }}</li>
-            <li>Highest Medium Score: {{ user_stats['medium'] }}</li>
-            <li>Highest Hard Score: {{ user_stats['hard'] }}</li>
+            <li>Highest Easy Score: {{ user_stats.easy }}</li>
+            <li>Highest Medium Score: {{ user_stats.medium }}</li>
+            <li>Highest Hard Score: {{ user_stats.hard }}</li>
         </ul>
     </div>
 </div>
@@ -37,9 +37,7 @@
 {% block scripts %}
 <script>
 function saveAboutMe() {
-    var aboutMe = document.getElementById('about_me').value;
-    // Here you would typically send this data to the server to save
-    // For now, we'll just update the placeholder
+    const aboutMe = document.getElementById('about_me').value;
     document.getElementById('about_me').placeholder = aboutMe;
 }
 </script>
