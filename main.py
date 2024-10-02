@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from config import Config
 from sqlalchemy import func, text
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 score = 0
@@ -15,15 +16,16 @@ app.config.from_object(Config)
 logging.basicConfig(level=logging.INFO)
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255))
+    about = db.Column(db.String(200))
 
     def __init__(self, username, email):
         self.username = username
@@ -34,7 +36,6 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
 
 class HighScore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,16 +57,13 @@ class HighScore(db.Model):
             'difficulty': self.difficulty,
         }
 
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -96,7 +94,6 @@ def register():
 
     return render_template('register.html')
 
-
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -113,13 +110,11 @@ def login():
 
     return render_template('login.html')
 
-
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
-
 
 @app.route("/profile")
 @login_required
@@ -156,7 +151,6 @@ def profile():
         )
         return redirect(url_for('index'))
 
-
 @app.route("/submit_score", methods=['POST'])
 @login_required
 def submit_score():
@@ -191,11 +185,9 @@ def submit_score():
         app.logger.error(f"Error submitting score: {str(e)}")
         return jsonify({'error': 'Failed to submit score'}), 500
 
-
 @app.route("/leaderboard")
 def leaderboard():
     return render_template('leaderboard.html')
-
 
 @app.route("/leaderboard/<difficulty>")
 def get_leaderboard(difficulty):
@@ -211,23 +203,35 @@ def get_leaderboard(difficulty):
                          exc_info=True)
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
 
-
 @app.route("/start_game", methods=['POST'])
 @login_required
 def start_game():
     return jsonify({"success": True})
 
+@app.route("/update_about", methods=['POST'])
+@login_required
+def update_about():
+    try:
+        data = request.json
+        about_text = data.get('about')
+        if about_text is not None:
+            current_user.about = about_text
+            db.session.commit()
+            return jsonify({"success": True}), 200
+        else:
+            return jsonify({"error": "No 'about' text provided"}), 400
+    except Exception as e:
+        app.logger.error(f"Error updating about text: {str(e)}")
+        return jsonify({"error": "An error occurred while updating the about text"}), 500
 
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
 
-
 def init_db():
     with app.app_context():
         db.create_all()
         db.session.commit()
-
 
 if __name__ == "__main__":
     init_db()
