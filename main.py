@@ -206,7 +206,12 @@ def get_leaderboard(difficulty):
 @app.route("/start_game", methods=['POST'])
 @login_required
 def start_game():
-    return jsonify({"success": True})
+    try:
+        app.logger.info(f"User {current_user.id} ({current_user.username}) is starting a game")
+        return jsonify({"success": True, "message": f"Game started for user {current_user.username}"})
+    except Exception as e:
+        app.logger.error(f"Error starting game for user {current_user.id}: {str(e)}")
+        return jsonify({"success": False, "error": "An error occurred while starting the game"}), 500
 
 @app.route("/update_about", methods=['POST'])
 @login_required
