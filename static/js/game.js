@@ -352,7 +352,16 @@ function startGame() {
             'Content-Type': 'application/json',
         },
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('User not authenticated');
+            } else {
+                throw new Error('Failed to start game');
+            }
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             console.log('Game started with difficulty:', selectedDifficulty);
@@ -372,13 +381,17 @@ function startGame() {
             lastFrameTime = 0;
             requestAnimationFrame(gameLoop);
         } else {
-            alert('Please log in to play the game.');
-            window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+            throw new Error('Failed to start game');
         }
     })
     .catch((error) => {
         console.error('Error:', error);
-        alert('An error occurred while starting the game. Please try again.');
+        if (error.message === 'User not authenticated') {
+            alert('Please log in to play the game.');
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+        } else {
+            alert('An error occurred while starting the game. Please try again.');
+        }
     });
 }
 
@@ -398,7 +411,7 @@ function endGame(isWin) {
     } else {
         gameOverSound.play();
     }
-    
+
     submitScore(score, selectedDifficulty);
     showLeaderboard(selectedDifficulty);
 }

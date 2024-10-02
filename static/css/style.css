@@ -342,6 +342,68 @@ form input {
     background-color: #45a049;
 }
 
+/* Add these styles to your existing CSS file */
+
+#game-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#game-canvas {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Media Queries */
+@media screen and (max-width: 768px) {
+    #game-container {
+        padding: 10px;
+    }
+
+    #game-canvas {
+        max-width: 100%;
+    }
+
+    button {
+        font-size: 1em;
+        padding: 8px 16px;
+    }
+
+    #score, #time {
+        font-size: 1em;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #game-container {
+        padding: 5px;
+    }
+
+    button {
+        font-size: 0.9em;
+        padding: 6px 12px;
+        margin: 5px 2px;
+    }
+
+    #score, #time {
+        font-size: 0.9em;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    h2 {
+        font-size: 1.2em;
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         width: 95%;
