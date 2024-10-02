@@ -132,32 +132,22 @@ def logout():
 def profile():
     try:
         app.logger.info(f"Accessing profile for user: {current_user.username}")
-        high_scores = HighScore.query.filter_by(
-            user_id=current_user.id).order_by(HighScore.score.desc()).first()
-
+        high_scores = HighScore.query.filter_by(user_id=current_user.id).order_by(HighScore.score.desc()).first()
+        
         user_stats = {}
         for difficulty in ['easy', 'medium', 'hard']:
-            stats = db.session.query(
-                func.max(HighScore.score).label('highest_score')).filter_by(
-                    user_id=current_user.id, difficulty=difficulty).first()
-            user_stats[
-                difficulty] = stats.highest_score if stats and stats.highest_score else 0
+            stats = db.session.query(func.max(HighScore.score).label('highest_score')).filter_by(
+                user_id=current_user.id, difficulty=difficulty).first()
+            user_stats[difficulty] = stats.highest_score if stats and stats.highest_score else 0
 
-        app.logger.info(
-            f"Profile data fetched successfully for user: {current_user.username}"
-        )
-        return render_template(
-            'profile.html',
-            user=current_user,
-            highest_score=high_scores.score if high_scores else 0,
-            user_stats=user_stats)
+        app.logger.info(f"Profile data fetched successfully for user: {current_user.username}")
+        return render_template('profile.html',
+                               user=current_user,
+                               highest_score=high_scores.score if high_scores else 0,
+                               user_stats=user_stats)
     except Exception as e:
-        app.logger.error(
-            f"Error fetching profile data for user {current_user.username}: {str(e)}"
-        )
-        flash(
-            'An error occurred while loading your profile. Please try again later.'
-        )
+        app.logger.error(f"Error fetching profile data for user {current_user.username}: {str(e)}")
+        flash('An error occurred while loading your profile. Please try again later.')
         return redirect(url_for('index'))
 
 
@@ -171,8 +161,7 @@ def submit_score():
         app.logger.error("Missing score or difficulty in request data")
         return jsonify({'error': 'Score and difficulty are required'}), 400
 
-    if not isinstance(data['score'], int) or not isinstance(
-            data['difficulty'], str):
+    if not isinstance(data['score'], int) or not isinstance(data['difficulty'], str):
         app.logger.error("Invalid data types for score or difficulty")
         return jsonify({'error': 'Invalid data types'}), 400
 
