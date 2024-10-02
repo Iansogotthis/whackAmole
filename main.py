@@ -124,33 +124,21 @@ def logout():
 @login_required
 def profile():
     try:
-        high_scores = HighScore.query.filter_by(
-            user_id=current_user.id).order_by(
-                HighScore.score.desc()).limit(10).all()
-
+        high_scores = HighScore.query.filter_by(user_id=current_user.id).order_by(HighScore.score.desc()).first()
+        
         user_stats = {}
         for difficulty in ['easy', 'medium', 'hard']:
-            stats = db.session.query(
-                func.count(HighScore.id).label('total_games'),
-                func.avg(HighScore.score).label('avg_score'),
-                func.max(HighScore.score).label('highest_score')).filter_by(
-                    user_id=current_user.id, difficulty=difficulty).first()
-
-            user_stats[difficulty] = {
-                'total_games': stats.total_games if stats else 0,
-                'avg_score': stats.avg_score if stats else 0,
-                'highest_score': stats.highest_score if stats else 0
-            }
+            stats = db.session.query(func.max(HighScore.score).label('highest_score')).filter_by(
+                user_id=current_user.id, difficulty=difficulty).first()
+            user_stats[difficulty] = stats.highest_score if stats and stats.highest_score else 0
 
         return render_template('profile.html',
                                user=current_user,
-                               high_scores=high_scores,
+                               highest_score=high_scores.score if high_scores else 0,
                                user_stats=user_stats)
     except Exception as e:
         app.logger.error(f"Error fetching profile data: {str(e)}")
-        flash(
-            'An error occurred while loading your profile. Please try again later.'
-        )
+        flash('An error occurred while loading your profile. Please try again later.')
         return redirect(url_for('index'))
 
 @app.route("/submit_score", methods=['POST'])

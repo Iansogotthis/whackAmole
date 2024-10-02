@@ -205,21 +205,46 @@ form input {
     color: #ff0000;
 }
 
-#profile table {
-    margin-top: 20px;
-    width: 100%;
-    border-collapse: collapse;
+#profile {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-#profile th, #profile td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+#profile h1 {
+    text-align: center;
+    color: #4CAF50;
 }
 
-#profile th {
-    background-color: #4CAF50;
-    color: white;
+#general_data, .blurb, .Leader_data {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+#general_data ul, .Leader_data ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#general_data li, .Leader_data li {
+    margin-bottom: 10px;
+}
+
+#me_form {
+    display: flex;
+    flex-direction: column;
+}
+
+#me_form textarea {
+    height: 100px;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+#me_form button {
+    align-self: flex-end;
 }
 
 @media only screen and (max-width: 600px) {

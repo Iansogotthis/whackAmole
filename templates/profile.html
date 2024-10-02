@@ -3,38 +3,44 @@
 {% block title %}Profile - {{ user.username }}{% endblock %}
 
 {% block content %}
-    <div id="profile">
-        <h1>Profile</h1>
-        <p>Username: {{ user.username }}</p>
-        <p>Email: {{ user.email }}</p>
-        
-        <h2>Game Statistics</h2>
-        {% for difficulty in ['easy', 'medium', 'hard'] %}
-            <h3>{{ difficulty.capitalize() }} Mode</h3>
-            {% set stats = user_stats.get(difficulty, {'total_games': 0, 'avg_score': 0, 'highest_score': 0}) %}
-            <p>Total Games Played: {{ stats.total_games }}</p>
-            <p>Average Score: {{ "%.2f"|format(stats.avg_score) }}</p>
-            <p>Highest Score: {{ stats.highest_score }}</p>
-        {% endfor %}
-        
-        <h2>Recent High Scores</h2>
-        {% if high_scores %}
-            <table>
-                <tr>
-                    <th>Difficulty</th>
-                    <th>Score</th>
-                    <th>Date</th>
-                </tr>
-                {% for score in high_scores %}
-                    <tr>
-                        <td>{{ score.difficulty }}</td>
-                        <td>{{ score.score }}</td>
-                        <td>{{ score.date }}</td>
-                    </tr>
-                {% endfor %}
-            </table>
-        {% else %}
-            <p>No high scores yet. Start playing to set some records!</p>
-        {% endif %}
+<div id="profile">
+    <h1>Welcome to "{{ user.username }}'s" Profile!!</h1>
+    
+    <div id="general_data">
+        <h2>General Info</h2>
+        <ul>
+            <li>Username: {{ user.username }}</li>
+            <li>Email: {{ user.email }}</li>
+            <li>Highest Score: {{ highest_score }}</li>
+        </ul>
     </div>
+
+    <div class="blurb">
+        <h2>About Me</h2>
+        <span id="me_form">
+            <textarea id="about_me" placeholder="Stuff about myself"></textarea>
+            <button onclick="saveAboutMe()">Save</button>
+        </span>
+    </div>
+
+    <div class="Leader_data">
+        <h2>League Placement</h2>
+        <ul>
+            <li>Highest Easy Score: {{ user_stats['easy'] }}</li>
+            <li>Highest Medium Score: {{ user_stats['medium'] }}</li>
+            <li>Highest Hard Score: {{ user_stats['hard'] }}</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function saveAboutMe() {
+    var aboutMe = document.getElementById('about_me').value;
+    // Here you would typically send this data to the server to save
+    // For now, we'll just update the placeholder
+    document.getElementById('about_me').placeholder = aboutMe;
+}
+</script>
 {% endblock %}
