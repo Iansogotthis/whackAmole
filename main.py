@@ -123,6 +123,7 @@ def logout():
 @login_required
 def profile():
     try:
+        app.logger.info(f"Accessing profile for user: {current_user.username}")
         high_scores = HighScore.query.filter_by(user_id=current_user.id).order_by(HighScore.score.desc()).first()
         
         user_stats = {}
@@ -131,12 +132,13 @@ def profile():
                 user_id=current_user.id, difficulty=difficulty).first()
             user_stats[difficulty] = stats.highest_score if stats and stats.highest_score else 0
 
+        app.logger.info(f"Profile data fetched successfully for user: {current_user.username}")
         return render_template('profile.html',
                                user=current_user,
                                highest_score=high_scores.score if high_scores else 0,
                                user_stats=user_stats)
     except Exception as e:
-        app.logger.error(f"Error fetching profile data: {str(e)}")
+        app.logger.error(f"Error fetching profile data for user {current_user.username}: {str(e)}")
         flash('An error occurred while loading your profile. Please try again later.')
         return redirect(url_for('index'))
 
