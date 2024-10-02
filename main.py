@@ -12,7 +12,14 @@ app.config.from_object(Config)
 
 logging.basicConfig(level=logging.INFO)
 
-db = SQLAlchemy(app)
+try:
+    db = SQLAlchemy(app)
+    with app.app_context():
+        db.create_all()
+except Exception as e:
+    app.logger.error(f"Database connection error: {str(e)}")
+    print(f"Error connecting to the database: {str(e)}")
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
