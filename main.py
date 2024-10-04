@@ -226,6 +226,7 @@ def get_leaderboard(difficulty):
 @app.route("/forum")
 @login_required
 def forum():
+    app.logger.info(f"User {current_user.username} accessed the forum")
     return render_template('forum.html')
 
 
@@ -233,11 +234,14 @@ def forum():
 @login_required
 def send_message():
     message = request.form.get('message')
+    app.logger.info(f"Received message from {current_user.username}: {message}")
     if message:
         new_message = ChatMessage(user_id=current_user.id, message=message)
         db.session.add(new_message)
         db.session.commit()
+        app.logger.info(f"Message saved to database: {new_message.to_dict()}")
         return jsonify({'status': 'success'}), 200
+    app.logger.warning(f"Empty message received from {current_user.username}")
     return jsonify({'status': 'error', 'message': 'Empty message'}), 400
 
 
@@ -249,7 +253,9 @@ def get_messages():
             messages = ChatMessage.query.filter(ChatMessage.id > last_id).order_by(ChatMessage.timestamp.asc()).all()
             if messages:
                 last_id = messages[-1].id
-                yield f"data: {json.dumps([msg.to_dict() for msg in messages])}\n\n"
+                message_data = [msg.to_dict() for msg in messages]
+                app.logger.info(f"Sending messages: {message_data}")
+                yield f"data: {json.dumps(message_data)}\n\n"
             time.sleep(1)
 
     return Response(generate(), mimetype='text/event-stream')
