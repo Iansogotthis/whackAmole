@@ -3,83 +3,42 @@
 {% block title %}Profile - {{ user.username }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Profile</h1>
-    <div class="user-info">
-        <p><strong>Username:</strong> {{ user.username }}</p>
-        <p><strong>Email:</strong> {{ user.email }}</p>
+<div id="profile">
+    <h1>Welcome to {{ user.username }}'s Profile</h1>
+    
+    <div id="general_data">
+        <h2>General Info</h2>
+        <ul>
+            <li>Username: {{ user.username }}</li>
+            <li>Email: {{ user.email }}</li>
+            <li>Highest Score: {{ highest_score }}</li>
+        </ul>
     </div>
-    
-    <h2>Game Statistics</h2>
-    <div class="stats-container">
-        {% for difficulty in ['easy', 'medium', 'hard'] %}
-            <div class="stats-box">
-                <h3>{{ difficulty.capitalize() }} Mode</h3>
-                {% set stats = user_stats.get(difficulty, {'total_games': 0, 'avg_score': 0, 'highest_score': 0}) %}
-                <p><strong>Total Games:</strong> {{ stats.total_games }}</p>
-                <p><strong>Average Score:</strong> {{ "%.2f"|format(stats.avg_score) }}</p>
-                <p><strong>Highest Score:</strong> {{ stats.highest_score }}</p>
-            </div>
-        {% endfor %}
+
+    <div class="blurb">
+        <h2>About Me</h2>
+        <span id="me_form">
+            <textarea id="about_me" placeholder="Share something about yourself..."></textarea>
+            <button onclick="saveAboutMe()">Save</button>
+        </span>
     </div>
-    
-    <div class="fancy-divider"></div>
-    
-    <h2>About {{ user.username }}</h2>
-    <form id="about-form" class="about-form">
-        <textarea id="about-text" maxlength="200" placeholder="{{ user.about or 'Things about me...' }}"></textarea>
-        <button type="submit">Save</button>
-    </form>
-    
-    <h2>Recent High Scores</h2>
-    {% if high_scores %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Difficulty</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for score in high_scores %}
-                    <tr>
-                        <td>{{ score.difficulty.capitalize() }}</td>
-                        <td>{{ score.score }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No high scores yet. Start playing to set some records!</p>
-    {% endif %}
+
+    <div class="Leader_data">
+        <h2>League Placement</h2>
+        <ul>
+            <li>Highest Easy Score: {{ user_stats.easy }}</li>
+            <li>Highest Medium Score: {{ user_stats.medium }}</li>
+            <li>Highest Hard Score: {{ user_stats.hard }}</li>
+        </ul>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.getElementById('about-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const aboutText = document.getElementById('about-text').value;
-    fetch('/update_about', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ about: aboutText }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('about-text').placeholder = aboutText;
-            document.getElementById('about-text').value = '';
-        } else {
-            alert('Failed to update about text');
-        }
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-        alert('An error occurred while updating about text');
-    });
-});
+function saveAboutMe() {
+    const aboutMe = document.getElementById('about_me').value;
+    document.getElementById('about_me').placeholder = aboutMe;
+}
 </script>
 {% endblock %}

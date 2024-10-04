@@ -6,26 +6,29 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from config import Config
 from sqlalchemy import func, text
-from flask_migrate import Migrate
 
 app = Flask(__name__)
-score = 0
-
 app.config.from_object(Config)
 
 logging.basicConfig(level=logging.INFO)
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+try:
+    db = SQLAlchemy(app)
+    with app.app_context():
+        db.create_all()
+except Exception as e:
+    app.logger.error(f"Database connection error: {str(e)}")
+    print(f"Error connecting to the database: {str(e)}")
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255))
-    about = db.Column(db.String(200))
 
     def __init__(self, username, email):
         self.username = username
@@ -37,12 +40,13 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+
 class HighScore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     difficulty = db.Column(db.String(10), nullable=False)
-    user = db.relationship('User', backref='high_scores')
+    date = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, user_id, score, difficulty):
         self.user_id = user_id
@@ -55,15 +59,19 @@ class HighScore(db.Model):
             'username': self.user.username,
             'score': self.score,
             'difficulty': self.difficulty,
+            'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
         }
+
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -94,6 +102,7 @@ def register():
 
     return render_template('register.html')
 
+
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -110,46 +119,37 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
+
 @app.route("/profile")
 @login_required
 def profile():
     try:
-        high_scores = HighScore.query.filter_by(
-            user_id=current_user.id).order_by(
-                HighScore.score.desc()).limit(10).all()
-
+        app.logger.info(f"Accessing profile for user: {current_user.username}")
+        high_scores = HighScore.query.filter_by(user_id=current_user.id).order_by(HighScore.score.desc()).first()
+        
         user_stats = {}
         for difficulty in ['easy', 'medium', 'hard']:
-            stats = db.session.query(
-                func.count(HighScore.id).label('total_games'),
-                func.avg(HighScore.score).label('avg_score'),
-                func.max(HighScore.score).label('highest_score')).filter_by(
-                    user_id=current_user.id, difficulty=difficulty).first()
+            stats = db.session.query(func.max(HighScore.score).label('highest_score')).filter_by(
+                user_id=current_user.id, difficulty=difficulty).first()
+            user_stats[difficulty] = stats.highest_score if stats and stats.highest_score else 0
 
-            user_stats[difficulty] = {
-                'total_games':
-                stats.total_games if stats else 0,
-                'avg_score':
-                round(stats.avg_score, 2) if stats and stats.avg_score else 0,
-                'highest_score':
-                stats.highest_score if stats else 0
-            }
+        app.logger.info(f"Profile data fetched successfully for user: {current_user.username}")
         return render_template('profile.html',
-                               user_stats=user_stats,
-                               high_scores=high_scores)
+                               user=current_user,
+                               highest_score=high_scores.score if high_scores else 0,
+                               user_stats=user_stats)
     except Exception as e:
-        app.logger.error(f"Error fetching profile data: {str(e)}",
-                         exc_info=True)
-        flash(
-            'An error occurred while loading your profile. Please try again later.'
-        )
+        app.logger.error(f"Error fetching profile data for user {current_user.username}: {str(e)}")
+        flash('An error occurred while loading your profile. Please try again later.')
         return redirect(url_for('index'))
+
 
 @app.route("/submit_score", methods=['POST'])
 @login_required
@@ -161,8 +161,7 @@ def submit_score():
         app.logger.error("Missing score or difficulty in request data")
         return jsonify({'error': 'Score and difficulty are required'}), 400
 
-    if not isinstance(data['score'], int) or not isinstance(
-            data['difficulty'], str):
+    if not isinstance(data['score'], int) or not isinstance(data['difficulty'], str):
         app.logger.error("Invalid data types for score or difficulty")
         return jsonify({'error': 'Invalid data types'}), 400
 
@@ -185,9 +184,11 @@ def submit_score():
         app.logger.error(f"Error submitting score: {str(e)}")
         return jsonify({'error': 'Failed to submit score'}), 500
 
+
 @app.route("/leaderboard")
 def leaderboard():
     return render_template('leaderboard.html')
+
 
 @app.route("/leaderboard/<difficulty>")
 def get_leaderboard(difficulty):
@@ -199,44 +200,24 @@ def get_leaderboard(difficulty):
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
         return jsonify(leaderboard)
     except Exception as e:
-        app.logger.error(f"Error fetching leaderboard: {str(e)}",
-                         exc_info=True)
+        app.logger.error(f"Error fetching leaderboard: {str(e)}")
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
 
-@app.route("/start_game", methods=['POST'])
-@login_required
-def start_game():
-    try:
-        app.logger.info(f"User {current_user.id} ({current_user.username}) is starting a game")
-        return jsonify({"success": True, "message": f"Game started for user {current_user.username}"})
-    except Exception as e:
-        app.logger.error(f"Error starting game for user {current_user.id}: {str(e)}")
-        return jsonify({"success": False, "error": "An error occurred while starting the game"}), 500
-
-@app.route("/update_about", methods=['POST'])
-@login_required
-def update_about():
-    try:
-        data = request.json
-        about_text = data.get('about')
-        if about_text is not None:
-            current_user.about = about_text
-            db.session.commit()
-            return jsonify({"success": True}), 200
-        else:
-            return jsonify({"error": "No 'about' text provided"}), 400
-    except Exception as e:
-        app.logger.error(f"Error updating about text: {str(e)}")
-        return jsonify({"error": "An error occurred while updating the about text"}), 500
 
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
 
+
 def init_db():
     with app.app_context():
         db.create_all()
+        db.session.execute(
+            text(
+                'ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255);'
+            ))
         db.session.commit()
+
 
 if __name__ == "__main__":
     init_db()

@@ -20,6 +20,7 @@ const MOLE_SIZE = 80;
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
+let score = 0;
 let timeLeft;
 let gameInterval;
 let moles = [];
@@ -32,10 +33,6 @@ let powerUps = [];
 let activePowerUp = null;
 let powerUpDuration = 3000;
 let lastPowerUpSpawn = 0;
-
-let currentPlayer = 1;
-let player1Score = 0;
-let player2Score = 0;
 
 const holeImage = new Image();
 holeImage.src = '/static/assets/hole.svg';
@@ -80,12 +77,8 @@ Promise.all([
 
 function updateScore(points) {
     const maxScore = 1000000;
-    if (currentPlayer === 1) {
-        player1Score = Math.min(player1Score + points, maxScore);
-    } else {
-        player2Score = Math.min(player2Score + points, maxScore);
-    }
-    scoreValue.textContent = `P1: ${player1Score} | P2: ${player2Score}`;
+    score = Math.min(score + points, maxScore);
+    scoreValue.textContent = score;
 }
 
 class Mole {
@@ -315,10 +308,6 @@ function applyPowerUpEffects() {
 
 function drawHammer(x, y) {
     ctx.drawImage(hammerImage, x - 25, y - 25, 50, 50);
-    
-    setTimeout(() => {
-        ctx.clearRect(x - 25, y - 25, 50, 50);
-    }, 100);
 }
 
 function gameLoop(currentTime) {
@@ -338,8 +327,8 @@ function gameLoop(currentTime) {
     timeLeft -= deltaTime / 1000;
     timeValue.textContent = Math.ceil(timeLeft);
 
-    if (Math.max(player1Score, player2Score) >= getDifficultySettings(getDifficultySettings().gameDuration - timeLeft).scoreToWin) {
-        endGame(true);
+    if (score >= getDifficultySettings(getDifficultySettings().gameDuration - timeLeft).scoreToWin) {
+        winGame();
     } else if (timeLeft <= 0) {
         endGame(false);
     } else {
@@ -356,121 +345,53 @@ function gameLoop(currentTime) {
     }
 }
 
-function switchPlayer() {
-    currentPlayer = currentPlayer === 1 ? 2 : 1;
-    document.getElementById('current-player').textContent = `Player ${currentPlayer}'s turn`;
-    console.log(`Switched to Player ${currentPlayer}'s turn`);
-}
-
-function handleInteraction(event) {
-    event.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    let x, y;
-
-    if (event.type.startsWith('touch')) {
-        const touch = event.touches[0] || event.changedTouches[0];
-        x = touch.clientX - rect.left;
-        y = touch.clientY - rect.top;
-    } else {
-        x = event.clientX - rect.left;
-        y = event.clientY - rect.top;
-    }
-
-    let hitSuccessful = false;
-    moles.forEach(mole => {
-        const distance = Math.sqrt((x - mole.x) ** 2 + (y - mole.y) ** 2);
-        if (distance < MOLE_SIZE / 2) {
-            if (mole.hit()) {
-                console.log(`${mole.type} Mole hit at: (${x}, ${y}), Player ${currentPlayer} Score: ${currentPlayer === 1 ? player1Score : player2Score}`);
-                hitSuccessful = true;
-            }
-        }
-    });
-
-    if (hitSuccessful) {
-        switchPlayer();
-    }
-
-    collectPowerUp(x, y);
-    drawHammer(x, y);
+function isUserLoggedIn() {
+    return document.body.classList.contains('logged-in');
 }
 
 function startGame() {
-    fetch('/start_game', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => {
-        if (!response.ok) {
-            if (response.status === 401) {
-                throw new Error('User not authenticated');
-            } else {
-                throw new Error('Failed to start game');
-            }
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            console.log('Game started with difficulty:', selectedDifficulty);
-            startScreen.style.display = 'none';
-            gameScreen.style.display = 'block';
-            gameOverScreen.style.display = 'none';
+    if (!isUserLoggedIn()) {
+        alert('Please log in to play the game.');
+        window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+        return;
+    }
 
-            player1Score = 0;
-            player2Score = 0;
-            currentPlayer = 1;
-            const difficultySettings = getDifficultySettings(0);
-            timeLeft = difficultySettings.gameDuration;
-            firstMoleAppeared = false;
-            lastMoleAppearance = 0;
-            scoreValue.textContent = `P1: 0 | P2: 0`;
-            timeValue.textContent = Math.ceil(timeLeft);
-            document.getElementById('current-player').textContent = 'Player 1\'s turn';
+    console.log('Game started with difficulty:', selectedDifficulty);
+    startScreen.style.display = 'none';
+    gameScreen.style.display = 'block';
+    gameOverScreen.style.display = 'none';
 
-            initializeMoles();
-            lastFrameTime = 0;
-            requestAnimationFrame(gameLoop);
-        } else {
-            throw new Error('Failed to start game');
-        }
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-        if (error.message === 'User not authenticated') {
-            alert('Please log in to play the game.');
-            window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
-        } else {
-            alert('An error occurred while starting the game. Please try again.');
-        }
-    });
+    score = 0;
+    const difficultySettings = getDifficultySettings(0);
+    timeLeft = difficultySettings.gameDuration;
+    firstMoleAppeared = false;
+    lastMoleAppearance = 0;
+    scoreValue.textContent = score;
+    timeValue.textContent = Math.ceil(timeLeft);
+
+    initializeMoles();
+    lastFrameTime = 0;
+    requestAnimationFrame(gameLoop);
+}
+
+function winGame() {
+    console.log('Game won');
+    endGame(true);
 }
 
 function endGame(isWin) {
     console.log('Game ended');
     gameScreen.style.display = 'none';
     gameOverScreen.style.display = 'block';
-    
-    let winner;
-    if (player1Score > player2Score) {
-        winner = 'Player 1';
-    } else if (player2Score > player1Score) {
-        winner = 'Player 2';
-    } else {
-        winner = 'It\'s a tie!';
-    }
-    
-    gameResult.textContent = isWin ? `${winner} Wins!` : 'Game Over';
-    finalScore.textContent = `Player 1: ${player1Score} | Player 2: ${player2Score}`;
+    gameResult.textContent = isWin ? 'You Win!' : 'Game Over';
+    finalScore.textContent = score;
     if (isWin) {
         winSound.play();
     } else {
         gameOverSound.play();
     }
-
-    submitScore(Math.max(player1Score, player2Score), selectedDifficulty);
+    
+    submitScore(score, selectedDifficulty);
     showLeaderboard(selectedDifficulty);
 }
 
@@ -554,11 +475,22 @@ difficultyButtons.forEach(button => {
     });
 });
 
-canvas.addEventListener('mousedown', handleInteraction);
-canvas.addEventListener('touchstart', handleInteraction);
-canvas.addEventListener('touchmove', handleInteraction);
-canvas.addEventListener('touchend', (event) => {
-    event.preventDefault();
+canvas.addEventListener('click', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    moles.forEach(mole => {
+        const distance = Math.sqrt((x - mole.x) ** 2 + (y - mole.y) ** 2);
+        if (distance < MOLE_SIZE / 2) {
+            if (mole.hit()) {
+                console.log(`${mole.type} Mole hit at: (${x}, ${y}), Score: ${score}`);
+            }
+        }
+    });
+
+    collectPowerUp(x, y);
+    drawHammer(x, y);
 });
 
 startButton.addEventListener('click', startGame);
