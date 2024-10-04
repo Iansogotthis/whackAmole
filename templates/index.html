@@ -6,16 +6,13 @@
     <div id="game-container">
         <div id="start-screen">
             <h1>Whack-a-Mole</h1>
-            <div id="game-mode-selection">
-                <button id="multiplayer-button" class="game-mode-button">Create Multiplayer</button>
-                <button id="ai-game-button" class="game-mode-button">Create AI Game</button>
-            </div>
             <div id="difficulty-selection">
                 <h3>Select Difficulty:</h3>
                 <button id="easy-button" class="difficulty-button">Easy</button>
                 <button id="medium-button" class="difficulty-button">Medium</button>
                 <button id="hard-button" class="difficulty-button">Hard</button>
             </div>
+            <button id="start-button" disabled>Start Game</button>
             <div id="instructions">
                 <h3>How to Play:</h3>
                 <p>Players take turns clicking on the moles as they appear to whack them! The game gets harder as time passes. Try to reach the target score before time runs out!</p>
@@ -55,13 +52,4 @@
 
 {% block scripts %}
     <script src="{{ url_for('static', filename='js/game.js') }}"></script>
-    <script>
-        document.getElementById('multiplayer-button').addEventListener('click', function() {
-            startGame('multiplayer');
-        });
-
-        document.getElementById('ai-game-button').addEventListener('click', function() {
-            startGame('ai');
-        });
-    </script>
 {% endblock %}

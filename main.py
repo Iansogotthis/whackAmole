@@ -207,13 +207,11 @@ def get_leaderboard(difficulty):
 @login_required
 def start_game():
     try:
-        data = request.json
-        game_mode = data.get('mode', 'multiplayer')  # Default to multiplayer if mode is not specified
-        app.logger.info(f"User {current_user.id} ({current_user.username}) is starting a {game_mode} game")
-        return jsonify({"success": True, "message": f"{game_mode.capitalize()} game started for user {current_user.username}"})
+        app.logger.info(f"User {current_user.id} ({current_user.username}) is starting a game")
+        return jsonify({"success": True, "message": f"Game started for user {current_user.username}"})
     except Exception as e:
-        app.logger.error(f"Error starting {game_mode} game for user {current_user.id}: {str(e)}")
-        return jsonify({"success": False, "error": f"An error occurred while starting the {game_mode} game"}), 500
+        app.logger.error(f"Error starting game for user {current_user.id}: {str(e)}")
+        return jsonify({"success": False, "error": "An error occurred while starting the game"}), 500
 
 @app.route("/update_about", methods=['POST'])
 @login_required
