@@ -82,21 +82,9 @@ button:active {
     transform: scale(0.95);
 }
 
-#game-modes {
-    margin-bottom: 20px;
-}
-
-.mode-button {
-    background-color: #3498db;
-}
-
-.mode-button:hover {
-    background-color: #2980b9;
-}
-
-.mode-button.selected {
-    background-color: #2ecc71;
-    font-weight: bold;
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
 
 #difficulty-selection {
@@ -134,4 +122,295 @@ h1, h2 {
     max-width: 400px;
     margin-left: auto;
     margin-right: auto;
+}
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.mole-pop {
+    animation: pop 0.3s ease-in-out;
+}
+
+#leaderboard {
+    margin-top: 20px;
+}
+
+#leaderboard table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#leaderboard th, #leaderboard td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#leaderboard th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#leaderboard tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#leaderboard tr:hover {
+    background-color: #ddd;
+}
+
+#user-actions {
+    margin-bottom: 20px;
+}
+
+#user-actions a {
+    margin-right: 10px;
+    text-decoration: none;
+    color: #4CAF50;
+}
+
+#user-actions a:hover {
+    text-decoration: underline;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+form div {
+    margin-bottom: 10px;
+}
+
+form label {
+    display: inline-block;
+    width: 100px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+form input {
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.flashes {
+    list-style-type: none;
+    padding: 0;
+    color: #ff0000;
+}
+
+#profile {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#profile h1 {
+    text-align: center;
+    color: #4CAF50;
+    margin-bottom: 30px;
+}
+
+#general_data, .blurb, .Leader_data {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#general_data h2, .blurb h2, .Leader_data h2 {
+    color: #4CAF50;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+#general_data ul, .Leader_data ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#general_data li, .Leader_data li {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+#me_form {
+    display: flex;
+    flex-direction: column;
+}
+
+#me_form textarea {
+    height: 100px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+#me_form button {
+    align-self: flex-end;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#me_form button:hover {
+    background-color: #45a049;
+}
+
+/* Forum styles */
+#forum-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#chat-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#chat-form {
+    display: flex;
+}
+
+#chat-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#chat-form button {
+    margin-left: 10px;
+}
+
+.chat-message {
+    margin-bottom: 10px;
+}
+
+#leaderboard-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#leaderboard-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.leaderboard-tab {
+    background-color: #f0f0f0;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.leaderboard-tab:hover {
+    background-color: #e0e0e0;
+}
+
+.leaderboard-tab.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#leaderboard-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#leaderboard-content th, #leaderboard-content td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#leaderboard-content th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#leaderboard-content tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#leaderboard-content tr:hover {
+    background-color: #ddd;
+}
+
+@media only screen and (max-width: 600px) {
+    body {
+        font-size: 0.9em;
+    }
+    #game-container, #forum-container {
+        width: 95%;
+        padding: 10px;
+    }
+    .navbar ul {
+        flex-direction: column;
+        align-items: center;
+    }
+    .navbar li {
+        margin: 10px 0;
+    }
+    #profile {
+        margin: 10px;
+        padding: 15px;
+    }
+    #chat-messages {
+        height: 200px;
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    body {
+        font-size: 0.8em;
+    }
+    #game-container, #forum-container {
+        width: 98%;
+        padding: 5px;
+    }
+    #leaderboard-tabs {
+        flex-direction: column;
+    }
+    .leaderboard-tab {
+        margin: 5px 0;
+    }
 }
