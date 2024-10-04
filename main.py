@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, Response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, Response, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -94,13 +94,17 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
 
+        app.logger.info(f"Registration attempt for user: {username}")
+
         user = User.query.filter_by(username=username).first()
         if user:
+            app.logger.warning(f"Username {username} already exists")
             flash('Username already exists')
             return redirect(url_for('register'))
 
         user = User.query.filter_by(email=email).first()
         if user:
+            app.logger.warning(f"Email {email} already exists")
             flash('Email already exists')
             return redirect(url_for('register'))
 
@@ -109,10 +113,18 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        app.logger.info(f"User {username} registered successfully")
         flash('Registration successful')
+        
         login_user(new_user)
+        app.logger.info(f"User {username} logged in after registration")
+        
         next_page = request.args.get('next')
-        return redirect(next_page or url_for('index'))
+        if not next_page or not is_safe_url(next_page):
+            next_page = url_for('index')
+        
+        app.logger.info(f"Redirecting user {username} to {next_page}")
+        return redirect(next_page)
 
     return render_template('register.html')
 
@@ -153,6 +165,7 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
+    app.logger.info(f"User {current_user.username} logged out")
     logout_user()
     return redirect(url_for('index'))
 
