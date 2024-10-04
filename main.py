@@ -25,7 +25,6 @@ except Exception as e:
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
@@ -41,7 +40,6 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
 
 class HighScore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,7 +62,6 @@ class HighScore(db.Model):
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
         }
 
-
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -81,16 +78,13 @@ class ChatMessage(db.Model):
             'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
         }
 
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -121,30 +115,35 @@ def register():
 
     return render_template('register.html')
 
-
 @app.route("/login", methods=['GET', 'POST'])
 def login():
+    app.logger.info("Login route accessed")
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        app.logger.info(f"Login attempt for user: {username}")
         user = User.query.filter_by(username=username).first()
 
         if user and user.check_password(password):
+            app.logger.info(f"User {username} authenticated successfully")
             login_user(user)
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('index'))
+            app.logger.info(f"Next page after login: {next_page}")
+            if not next_page or not next_page.startswith('/'):
+                next_page = url_for('index')
+            app.logger.info(f"Redirecting to: {next_page}")
+            return redirect(next_page)
         else:
+            app.logger.warning(f"Failed login attempt for user: {username}")
             flash('Invalid username or password')
 
     return render_template('login.html')
-
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
-
 
 @app.route("/profile")
 @login_required
@@ -168,7 +167,6 @@ def profile():
         app.logger.error(f"Error fetching profile data for user {current_user.username}: {str(e)}")
         flash('An error occurred while loading your profile. Please try again later.')
         return redirect(url_for('index'))
-
 
 @app.route("/submit_score", methods=['POST'])
 @login_required
@@ -203,11 +201,9 @@ def submit_score():
         app.logger.error(f"Error submitting score: {str(e)}")
         return jsonify({'error': 'Failed to submit score'}), 500
 
-
 @app.route("/leaderboard")
 def leaderboard():
     return render_template('leaderboard.html')
-
 
 @app.route("/leaderboard/<difficulty>")
 def get_leaderboard(difficulty):
@@ -222,13 +218,11 @@ def get_leaderboard(difficulty):
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
 
-
 @app.route("/forum")
 @login_required
 def forum():
     app.logger.info(f"User {current_user.username} accessed the forum")
     return render_template('forum.html')
-
 
 @app.route("/send_message", methods=['POST'])
 @login_required
@@ -243,7 +237,6 @@ def send_message():
         return jsonify({'status': 'success'}), 200
     app.logger.warning(f"Empty message received from {current_user.username}")
     return jsonify({'status': 'error', 'message': 'Empty message'}), 400
-
 
 @app.route("/get_messages")
 def get_messages():
@@ -260,11 +253,9 @@ def get_messages():
 
     return Response(generate(), mimetype='text/event-stream')
 
-
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
-
 
 def init_db():
     with app.app_context():
@@ -274,7 +265,6 @@ def init_db():
                 'ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255);'
             ))
         db.session.commit()
-
 
 if __name__ == "__main__":
     init_db()
