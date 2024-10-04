@@ -20,7 +20,6 @@ const MOLE_SIZE = 80;
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
-let score = 0;
 let timeLeft;
 let gameInterval;
 let moles = [];
@@ -33,6 +32,10 @@ let powerUps = [];
 let activePowerUp = null;
 let powerUpDuration = 3000;
 let lastPowerUpSpawn = 0;
+
+let currentPlayer = 1;
+let player1Score = 0;
+let player2Score = 0;
 
 const holeImage = new Image();
 holeImage.src = '/static/assets/hole.svg';
@@ -77,8 +80,13 @@ Promise.all([
 
 function updateScore(points) {
     const maxScore = 1000000;
-    score = Math.min(score + points, maxScore);
-    scoreValue.textContent = score;
+    if (currentPlayer === 1) {
+        player1Score = Math.min(player1Score + points, maxScore);
+        scoreValue.textContent = `P1: ${player1Score} | P2: ${player2Score}`;
+    } else {
+        player2Score = Math.min(player2Score + points, maxScore);
+        scoreValue.textContent = `P1: ${player1Score} | P2: ${player2Score}`;
+    }
 }
 
 class Mole {
@@ -331,8 +339,8 @@ function gameLoop(currentTime) {
     timeLeft -= deltaTime / 1000;
     timeValue.textContent = Math.ceil(timeLeft);
 
-    if (score >= getDifficultySettings(getDifficultySettings().gameDuration - timeLeft).scoreToWin) {
-        winGame();
+    if (Math.max(player1Score, player2Score) >= getDifficultySettings(getDifficultySettings().gameDuration - timeLeft).scoreToWin) {
+        endGame(true);
     } else if (timeLeft <= 0) {
         endGame(false);
     } else {
@@ -347,6 +355,11 @@ function gameLoop(currentTime) {
         }
         requestAnimationFrame(gameLoop);
     }
+}
+
+function switchPlayer() {
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    document.getElementById('current-player').textContent = `Player ${currentPlayer}'s turn`;
 }
 
 function startGame() {
@@ -373,13 +386,16 @@ function startGame() {
             gameScreen.style.display = 'block';
             gameOverScreen.style.display = 'none';
 
-            score = 0;
+            player1Score = 0;
+            player2Score = 0;
+            currentPlayer = 1;
             const difficultySettings = getDifficultySettings(0);
             timeLeft = difficultySettings.gameDuration;
             firstMoleAppeared = false;
             lastMoleAppearance = 0;
-            scoreValue.textContent = score;
+            scoreValue.textContent = `P1: 0 | P2: 0`;
             timeValue.textContent = Math.ceil(timeLeft);
+            document.getElementById('current-player').textContent = 'Player 1\'s turn';
 
             initializeMoles();
             lastFrameTime = 0;
@@ -399,24 +415,29 @@ function startGame() {
     });
 }
 
-function winGame() {
-    console.log('Game won');
-    endGame(true);
-}
-
 function endGame(isWin) {
     console.log('Game ended');
     gameScreen.style.display = 'none';
     gameOverScreen.style.display = 'block';
-    gameResult.textContent = isWin ? 'You Win!' : 'Game Over';
-    finalScore.textContent = score;
+    
+    let winner;
+    if (player1Score > player2Score) {
+        winner = 'Player 1';
+    } else if (player2Score > player1Score) {
+        winner = 'Player 2';
+    } else {
+        winner = 'It\'s a tie!';
+    }
+    
+    gameResult.textContent = isWin ? `${winner} Wins!` : 'Game Over';
+    finalScore.textContent = `Player 1: ${player1Score} | Player 2: ${player2Score}`;
     if (isWin) {
         winSound.play();
     } else {
         gameOverSound.play();
     }
 
-    submitScore(score, selectedDifficulty);
+    submitScore(Math.max(player1Score, player2Score), selectedDifficulty);
     showLeaderboard(selectedDifficulty);
 }
 
@@ -512,7 +533,8 @@ function handleInteraction(event) {
         const distance = Math.sqrt((x - mole.x) ** 2 + (y - mole.y) ** 2);
         if (distance < MOLE_SIZE / 2) {
             if (mole.hit()) {
-                console.log(`${mole.type} Mole hit at: (${x}, ${y}), Score: ${score}`);
+                console.log(`${mole.type} Mole hit at: (${x}, ${y}), Player ${currentPlayer} Score: ${currentPlayer === 1 ? player1Score : player2Score}`);
+                switchPlayer();
             }
         }
     });
