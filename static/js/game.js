@@ -36,6 +36,7 @@ let lastPowerUpSpawn = 0;
 let currentPlayer = 1;
 let player1Score = 0;
 let player2Score = 0;
+let gameMode = null;
 
 const holeImage = new Image();
 holeImage.src = '/static/assets/hole.svg';
@@ -80,12 +81,16 @@ Promise.all([
 
 function updateScore(points) {
     const maxScore = 1000000;
-    if (currentPlayer === 1) {
-        player1Score = Math.min(player1Score + points, maxScore);
+    if (gameMode === 'multiplayer') {
+        if (currentPlayer === 1) {
+            player1Score = Math.min(player1Score + points, maxScore);
+        } else {
+            player2Score = Math.min(player2Score + points, maxScore);
+        }
         scoreValue.textContent = `P1: ${player1Score} | P2: ${player2Score}`;
     } else {
-        player2Score = Math.min(player2Score + points, maxScore);
-        scoreValue.textContent = `P1: ${player1Score} | P2: ${player2Score}`;
+        player1Score = Math.min(player1Score + points, maxScore);
+        scoreValue.textContent = player1Score;
     }
 }
 
@@ -358,16 +363,20 @@ function gameLoop(currentTime) {
 }
 
 function switchPlayer() {
-    currentPlayer = currentPlayer === 1 ? 2 : 1;
-    document.getElementById('current-player').textContent = `Player ${currentPlayer}'s turn`;
+    if (gameMode === 'multiplayer') {
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        document.getElementById('current-player').textContent = `Player ${currentPlayer}'s turn`;
+    }
 }
 
-function startGame() {
+function startGame(mode) {
+    gameMode = mode;
     fetch('/start_game', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ mode: mode }),
     })
     .then(response => {
         if (!response.ok) {
@@ -381,7 +390,7 @@ function startGame() {
     })
     .then(data => {
         if (data.success) {
-            console.log('Game started with difficulty:', selectedDifficulty);
+            console.log('Game started with mode:', mode, 'and difficulty:', selectedDifficulty);
             startScreen.style.display = 'none';
             gameScreen.style.display = 'block';
             gameOverScreen.style.display = 'none';
@@ -393,9 +402,10 @@ function startGame() {
             timeLeft = difficultySettings.gameDuration;
             firstMoleAppeared = false;
             lastMoleAppearance = 0;
-            scoreValue.textContent = `P1: 0 | P2: 0`;
+            scoreValue.textContent = gameMode === 'multiplayer' ? `P1: 0 | P2: 0` : '0';
             timeValue.textContent = Math.ceil(timeLeft);
-            document.getElementById('current-player').textContent = 'Player 1\'s turn';
+            document.getElementById('current-player').textContent = gameMode === 'multiplayer' ? 'Player 1\'s turn' : 'Game in progress';
+            document.getElementById('current-player').style.display = gameMode === 'multiplayer' ? 'block' : 'none';
 
             initializeMoles();
             lastFrameTime = 0;
@@ -421,16 +431,20 @@ function endGame(isWin) {
     gameOverScreen.style.display = 'block';
     
     let winner;
-    if (player1Score > player2Score) {
-        winner = 'Player 1';
-    } else if (player2Score > player1Score) {
-        winner = 'Player 2';
+    if (gameMode === 'multiplayer') {
+        if (player1Score > player2Score) {
+            winner = 'Player 1';
+        } else if (player2Score > player1Score) {
+            winner = 'Player 2';
+        } else {
+            winner = 'It\'s a tie!';
+        }
     } else {
-        winner = 'It\'s a tie!';
+        winner = 'Player';
     }
     
     gameResult.textContent = isWin ? `${winner} Wins!` : 'Game Over';
-    finalScore.textContent = `Player 1: ${player1Score} | Player 2: ${player2Score}`;
+    finalScore.textContent = gameMode === 'multiplayer' ? `Player 1: ${player1Score} | Player 2: ${player2Score}` : `Score: ${player1Score}`;
     if (isWin) {
         winSound.play();
     } else {
@@ -556,11 +570,10 @@ canvas.addEventListener('touchend', (event) => {
     event.preventDefault();
 });
 
-startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', () => {
     startScreen.style.display = 'block';
     gameOverScreen.style.display = 'none';
-    startButton.disabled = true;
+    gameMode = null;
     selectedDifficulty = null;
     difficultyButtons.forEach(btn => btn.classList.remove('selected'));
 });
