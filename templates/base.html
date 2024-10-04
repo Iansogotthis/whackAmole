@@ -12,6 +12,7 @@
             <li><a href="{{ url_for('index') }}">New Game</a></li>
             <li><a href="{{ url_for('leaderboard') }}">Leaderboard</a></li>
             {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('forum') }}">Forum</a></li>
                 <li><a href="{{ url_for('profile') }}">Profile</a></li>
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
             {% else %}

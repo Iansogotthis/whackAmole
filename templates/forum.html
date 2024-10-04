@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Forum - Whack-a-Mole{% endblock %}
+
+{% block content %}
+<div id="forum-container">
+    <h1>Whack-a-Mole Forum</h1>
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <form id="chat-form">
+            <input type="text" id="chat-input" placeholder="Type your message..." required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <div id="leaderboard-container">
+        <h2>Leaderboard</h2>
+        <div id="leaderboard-tabs">
+            <button class="leaderboard-tab" data-difficulty="easy">Easy</button>
+            <button class="leaderboard-tab" data-difficulty="medium">Medium</button>
+            <button class="leaderboard-tab" data-difficulty="hard">Hard</button>
+        </div>
+        <div id="leaderboard-content"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const leaderboardTabs = document.querySelectorAll('.leaderboard-tab');
+    const leaderboardContent = document.getElementById('leaderboard-content');
+
+    // Server-Sent Events for real-time chat
+    const eventSource = new EventSource("{{ url_for('get_messages') }}");
+    eventSource.onmessage = function(event) {
+        const messages = JSON.parse(event.data);
+        messages.forEach(message => {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'chat-message';
+            messageElement.innerHTML = `<strong>${message.username}:</strong> ${message.message}`;
+            chatMessages.appendChild(messageElement);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    // Send chat message
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (message) {
+            fetch("{{ url_for('send_message') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `message=${encodeURIComponent(message)}`
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      chatInput.value = '';
+                  }
+              });
+        }
+    });
+
+    // Leaderboard functionality
+    function loadLeaderboard(difficulty) {
+        fetch(`/leaderboard/${difficulty}`)
+            .then(response => response.json())
+            .then(data => {
+                let html = `<h3>${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Mode</h3>
+                            <table>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>Score</th>
+                                    <th>Date</th>
+                                </tr>`;
+                data.forEach((score, index) => {
+                    html += `<tr>
+                                <td>${index + 1}</td>
+                                <td>${score.username}</td>
+                                <td>${score.score}</td>
+                                <td>${score.date}</td>
+                            </tr>`;
+                });
+                html += '</table>';
+                leaderboardContent.innerHTML = html;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    leaderboardTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const difficulty = tab.dataset.difficulty;
+            loadLeaderboard(difficulty);
+            leaderboardTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+        });
+    });
+
+    // Load Easy leaderboard by default
+    loadLeaderboard('easy');
+    leaderboardTabs[0].classList.add('active');
+</script>
+{% endblock %}

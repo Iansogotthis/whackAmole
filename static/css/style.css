@@ -274,11 +274,112 @@ form input {
     background-color: #45a049;
 }
 
+/* Forum styles */
+#forum-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#chat-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#chat-form {
+    display: flex;
+}
+
+#chat-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#chat-form button {
+    margin-left: 10px;
+}
+
+.chat-message {
+    margin-bottom: 10px;
+}
+
+#leaderboard-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#leaderboard-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.leaderboard-tab {
+    background-color: #f0f0f0;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.leaderboard-tab:hover {
+    background-color: #e0e0e0;
+}
+
+.leaderboard-tab.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#leaderboard-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#leaderboard-content th, #leaderboard-content td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+#leaderboard-content th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#leaderboard-content tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#leaderboard-content tr:hover {
+    background-color: #ddd;
+}
+
 @media only screen and (max-width: 600px) {
     body {
         font-size: 0.9em;
     }
-    #game-container {
+    #game-container, #forum-container {
         width: 95%;
         padding: 10px;
     }
@@ -293,14 +394,23 @@ form input {
         margin: 10px;
         padding: 15px;
     }
+    #chat-messages {
+        height: 200px;
+    }
 }
 
 @media only screen and (max-width: 400px) {
     body {
         font-size: 0.8em;
     }
-    #game-container {
+    #game-container, #forum-container {
         width: 98%;
         padding: 5px;
+    }
+    #leaderboard-tabs {
+        flex-direction: column;
+    }
+    .leaderboard-tab {
+        margin: 5px 0;
     }
 }

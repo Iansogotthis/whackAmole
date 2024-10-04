@@ -1,11 +1,13 @@
 import logging
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from config import Config
 from sqlalchemy import func, text
+import json
+import time
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -60,6 +62,23 @@ class HighScore(db.Model):
             'score': self.score,
             'difficulty': self.difficulty,
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.String(500), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('messages', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.user.username,
+            'message': self.message,
+            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
         }
 
 
@@ -202,6 +221,38 @@ def get_leaderboard(difficulty):
     except Exception as e:
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
+
+
+@app.route("/forum")
+@login_required
+def forum():
+    return render_template('forum.html')
+
+
+@app.route("/send_message", methods=['POST'])
+@login_required
+def send_message():
+    message = request.form.get('message')
+    if message:
+        new_message = ChatMessage(user_id=current_user.id, message=message)
+        db.session.add(new_message)
+        db.session.commit()
+        return jsonify({'status': 'success'}), 200
+    return jsonify({'status': 'error', 'message': 'Empty message'}), 400
+
+
+@app.route("/get_messages")
+def get_messages():
+    def generate():
+        last_id = 0
+        while True:
+            messages = ChatMessage.query.filter(ChatMessage.id > last_id).order_by(ChatMessage.timestamp.asc()).all()
+            if messages:
+                last_id = messages[-1].id
+                yield f"data: {json.dumps([msg.to_dict() for msg in messages])}\n\n"
+            time.sleep(1)
+
+    return Response(generate(), mimetype='text/event-stream')
 
 
 @app.context_processor
