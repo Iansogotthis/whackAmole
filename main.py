@@ -145,6 +145,7 @@ def login():
         if user and user.check_password(password):
             app.logger.info(f"User {username} authenticated successfully")
             login_user(user)
+            app.logger.info(f"User {username} logged in, current_user.is_authenticated: {current_user.is_authenticated}")
             next_page = request.args.get('next')
             app.logger.info(f"Next page after login: {next_page}")
             if not next_page or not is_safe_url(next_page):
