@@ -82,11 +82,10 @@ function updateScore(points) {
     const maxScore = 1000000;
     if (currentPlayer === 1) {
         player1Score = Math.min(player1Score + points, maxScore);
-        scoreValue.textContent = `P1: ${player1Score} | P2: ${player2Score}`;
     } else {
         player2Score = Math.min(player2Score + points, maxScore);
-        scoreValue.textContent = `P1: ${player1Score} | P2: ${player2Score}`;
     }
+    scoreValue.textContent = `P1: ${player1Score} | P2: ${player2Score}`;
 }
 
 class Mole {
@@ -360,6 +359,40 @@ function gameLoop(currentTime) {
 function switchPlayer() {
     currentPlayer = currentPlayer === 1 ? 2 : 1;
     document.getElementById('current-player').textContent = `Player ${currentPlayer}'s turn`;
+    console.log(`Switched to Player ${currentPlayer}'s turn`);
+}
+
+function handleInteraction(event) {
+    event.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
+
+    if (event.type.startsWith('touch')) {
+        const touch = event.touches[0] || event.changedTouches[0];
+        x = touch.clientX - rect.left;
+        y = touch.clientY - rect.top;
+    } else {
+        x = event.clientX - rect.left;
+        y = event.clientY - rect.top;
+    }
+
+    let hitSuccessful = false;
+    moles.forEach(mole => {
+        const distance = Math.sqrt((x - mole.x) ** 2 + (y - mole.y) ** 2);
+        if (distance < MOLE_SIZE / 2) {
+            if (mole.hit()) {
+                console.log(`${mole.type} Mole hit at: (${x}, ${y}), Player ${currentPlayer} Score: ${currentPlayer === 1 ? player1Score : player2Score}`);
+                hitSuccessful = true;
+            }
+        }
+    });
+
+    if (hitSuccessful) {
+        switchPlayer();
+    }
+
+    collectPowerUp(x, y);
+    drawHammer(x, y);
 }
 
 function startGame() {
@@ -513,34 +546,6 @@ function selectDifficulty(difficulty) {
     difficultyButtons.forEach(btn => btn.classList.remove('selected'));
     document.getElementById(`${difficulty}-button`).classList.add('selected');
     startButton.disabled = false;
-}
-
-function handleInteraction(event) {
-    event.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    let x, y;
-
-    if (event.type.startsWith('touch')) {
-        const touch = event.touches[0] || event.changedTouches[0];
-        x = touch.clientX - rect.left;
-        y = touch.clientY - rect.top;
-    } else {
-        x = event.clientX - rect.left;
-        y = event.clientY - rect.top;
-    }
-
-    moles.forEach(mole => {
-        const distance = Math.sqrt((x - mole.x) ** 2 + (y - mole.y) ** 2);
-        if (distance < MOLE_SIZE / 2) {
-            if (mole.hit()) {
-                console.log(`${mole.type} Mole hit at: (${x}, ${y}), Player ${currentPlayer} Score: ${currentPlayer === 1 ? player1Score : player2Score}`);
-                switchPlayer();
-            }
-        }
-    });
-
-    collectPowerUp(x, y);
-    drawHammer(x, y);
 }
 
 difficultyButtons.forEach(button => {

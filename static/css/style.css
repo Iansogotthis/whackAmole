@@ -342,8 +342,6 @@ form input {
     background-color: #45a049;
 }
 
-/* Add these styles to your existing CSS file */
-
 #game-container {
     width: 100%;
     max-width: 800px;
@@ -360,7 +358,17 @@ form input {
     display: block;
 }
 
-/* Media Queries */
+.current-player {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #4CAF50;
+    margin: 10px 0;
+    padding: 5px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    text-align: center;
+}
+
 @media screen and (max-width: 768px) {
     #game-container {
         padding: 10px;
