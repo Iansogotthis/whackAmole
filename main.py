@@ -8,6 +8,7 @@ from config import Config
 from sqlalchemy import func, text
 import json
 import time
+from urllib.parse import urlparse, urljoin
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -115,6 +116,11 @@ def register():
 
     return render_template('register.html')
 
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     app.logger.info("Login route accessed")
@@ -129,12 +135,17 @@ def login():
             login_user(user)
             next_page = request.args.get('next')
             app.logger.info(f"Next page after login: {next_page}")
-            if not next_page or not next_page.startswith('/'):
+            if not next_page or not is_safe_url(next_page):
                 next_page = url_for('index')
             app.logger.info(f"Redirecting to: {next_page}")
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=True, redirect=next_page)
             return redirect(next_page)
         else:
             app.logger.warning(f"Failed login attempt for user: {username}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message='Invalid username or password')
             flash('Invalid username or password')
 
     return render_template('login.html')
