@@ -145,5 +145,13 @@
 
     // Load Easy leaderboard by default
     loadLeaderboard('easy');
+
+    // Refresh leaderboard every 30 seconds
+    function refreshLeaderboard() {
+        const activeDifficulty = document.querySelector('.leaderboard-tab.active').dataset.difficulty;
+        loadLeaderboard(activeDifficulty);
+    }
+
+    setInterval(refreshLeaderboard, 30000);
 </script>
 {% endblock %}
