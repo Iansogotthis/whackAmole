@@ -6,22 +6,24 @@
     <title>{% block title %}Whack-a-Mole{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body class="{{ 'logged-in' if current_user.is_authenticated else '' }}">
     <nav class="navbar">
         <ul>
             <li><a href="{{ url_for('index') }}">New Game</a></li>
             <li><a href="{{ url_for('leaderboard') }}">Leaderboard</a></li>
             {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                <li><a href="{{ url_for('forum') }}">Forum</a></li>
+                <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout ({{ current_user.username }})</a></li>
             {% else %}
                 <li><a href="{{ url_for('login') }}">Login</a></li>
-                <li><a href="{{ url_for('register') }}">Sign Up</a></li>
+                <li><a href="{{ url_for('register') }}">Sign up</a></li>
             {% endif %}
         </ul>
     </nav>
-
-    {% block content %}{% endblock %}
-    
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
     {% block scripts %}{% endblock %}
 </body>
 </html>

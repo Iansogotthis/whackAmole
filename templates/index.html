@@ -3,58 +3,52 @@
 {% block title %}Whack-a-Mole{% endblock %}
 
 {% block content %}
-<div id="game-container">
-    <h1>Welcome to Whack-A-Mole!</h1>
-
-    <div id="game-modes">
-        <button id="single-player" class="mode-button">Single Player</button>
-        <button id="ai-player" class="mode-button">Play vs AI</button>
+    <div id="game-container">
+        <div id="start-screen">
+            <h1>Whack-a-Mole</h1>
+            <div id="difficulty-selection">
+                <h3>Select Difficulty:</h3>
+                <button id="easy-button" class="difficulty-button">Easy</button>
+                <button id="medium-button" class="difficulty-button">Medium</button>
+                <button id="hard-button" class="difficulty-button">Hard</button>
+            </div>
+            <button id="start-button" disabled>Start Game</button>
+            <div id="instructions">
+                <h3>How to Play:</h3>
+                <p>Click on the moles as they appear to whack them! The game gets harder as time passes. Try to reach the target score before time runs out!</p>
+                <h4>Mole Types:</h4>
+                <ul>
+                    <li>Normal Mole: 1 point</li>
+                    <li>Fast Mole (Red): 2 points</li>
+                    <li>Golden Mole: 5 points</li>
+                </ul>
+                <h4>Power-ups:</h4>
+                <ul>
+                    <li>Hammer (Red): Increases mole point value by 1 for 3 seconds</li>
+                    <li>Freeze (Blue): Slows down mole disappearance for 3 seconds</li>
+                </ul>
+                <h4>Target Scores:</h4>
+                <ul>
+                    <li>Easy: 30 points</li>
+                    <li>Medium: 50 points</li>
+                    <li>Hard: 80 points</li>
+                </ul>
+            </div>
+        </div>
+        <div id="game-screen" style="display: none;">
+            <div id="score">Score: <span id="score-value">0</span></div>
+            <div id="time">Time: <span id="time-value">30</span></div>
+            <canvas id="game-canvas"></canvas>
+        </div>
+        <div id="game-over-screen" style="display: none;">
+            <h2 id="game-result">Game Over</h2>
+            <p>Your score: <span id="final-score"></span></p>
+            <div id="leaderboard"></div>
+            <button id="restart-button">Play Again</button>
+        </div>
     </div>
-    <div id="difficulty-selection">
-        <button class="difficulty-button" data-difficulty="easy">Easy</button>
-        <button class="difficulty-button" data-difficulty="medium">Medium</button>
-        <button class="difficulty-button" data-difficulty="hard">Hard</button>
-    </div>
-    <div id="score">Score: <span id="score-value">0</span></div>
-    <div id="time">Time: <span id="time-value">60</span></div>
-    <canvas id="game-canvas" width="400" height="400"></canvas>
-    <button id="start-button">Start Game</button>
-
-    <div id="instructions">
-        <h3>How to Play:</h3>
-        <p>Click on the moles as they appear to whack them! The game gets harder as time passes. Try to reach the target score before time runs out!</p>
-        <h4>Mole Types:</h4>
-        <ul>
-            <li>Normal Mole: 1 point</li>
-            <li>Fast Mole (Red): 2 points</li>
-            <li>Golden Mole: 5 points</li>
-        </ul>
-        <h4>Power-ups:</h4>
-        <ul>
-            <li>Hammer (Red): Increases mole point value by 1 for 3 seconds</li>
-            <li>Freeze (Blue): Slows down mole disappearance for 3 seconds</li>
-        </ul>
-        <h4>Target Scores:</h4>
-        <ul>
-            <li>Easy: 30 points</li>
-            <li>Medium: 50 points</li>
-            <li>Hard: 80 points</li>
-        </ul>
-    </div>
-</div>
-<div id="game-screen" style="display: none;">
-    <div id="score">Score: <span id="score-value">0</span></div>
-    <div id="time">Time: <span id="time-value">30</span></div>
-    <canvas id="game-canvas"></canvas>
-</div>
-<div id="game-over-screen" style="display: none;">
-    <h2 id="game-result">Game Over</h2>
-    <p>Your score: <span id="final-score"></span></p>
-    <div id="leaderboard"></div>
-    <button id="restart-button">Play Again</button>
-</div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
 {% endblock %}
