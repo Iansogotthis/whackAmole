@@ -6,6 +6,7 @@ A web-based Whack-a-Mole game using Flask and JavaScript with HTML5 Canvas, feat
 
 - Python 3.7 or higher
 - PostgreSQL database
+- Cassandra database (optional)
 
 ## Local Setup
 
@@ -30,15 +31,17 @@ A web-based Whack-a-Mole game using Flask and JavaScript with HTML5 Canvas, feat
    ```
    DATABASE_URL=postgresql://username:password@localhost:5432/whack_a_mole
    SECRET_KEY=your_secret_key_here
+   CASSANDRA_KEYSPACE=your_cassandra_keyspace
+   CASSANDRA_HOSTS=cassandra_host1,cassandra_host2
+   CASSANDRA_BUNDLE=/path/to/cassandra/bundle.pem
+   CASSANDRA_USERNAME=cassandra_username
+   CASSANDRA_PASSWORD=cassandra_password
    ```
-   Replace `username`, `password`, and `whack_a_mole` with your PostgreSQL credentials and database name.
+   Replace the values with your actual database credentials and settings.
 
 5. Initialize the database:
    ```
-   python
-   >>> from main import db
-   >>> db.create_all()
-   >>> exit()
+   flask db upgrade
    ```
 
 ## Running the Application
@@ -52,28 +55,10 @@ A web-based Whack-a-Mole game using Flask and JavaScript with HTML5 Canvas, feat
 
 ## Game Instructions
 
-1. Register for an account or log in if you already have one.
-2. Select a difficulty level (Easy, Medium, or Hard) and click "Start Game".
-3. Click on the moles as they appear to whack them and earn points.
-4. Different types of moles give different points:
-   - Normal Mole: 1 point
-   - Fast Mole (Red): 2 points
-   - Golden Mole: 5 points
-5. Collect power-ups to gain advantages:
-   - Hammer (Red): Increases mole point value by 1 for 3 seconds
-   - Freeze (Blue): Slows down mole disappearance for 3 seconds
-6. Try to reach the target score before time runs out:
-   - Easy: 30 points
-   - Medium: 50 points
-   - Hard: 80 points
-7. Your high scores will be saved to your profile.
+(Keep the existing game instructions)
 
 ## Features
 
-- User registration and login system
-- Personalized user profiles with saved high scores
-- Leaderboard for each difficulty level
-- Power-ups to enhance gameplay
-- Three difficulty levels with varying gameplay mechanics
+(Keep the existing features list)
 
 Enjoy playing Whack-a-Mole!

@@ -6,6 +6,10 @@
 <div id="forum-container">
     <h1>Whack-a-Mole Forum</h1>
     
+    <div id="welcome-message">
+        <h2>Welcome, {{ current_user.username }}!</h2>
+    </div>
+    
     <div id="announcements">
         <h2>Recent Highlights</h2>
         <ul id="highlights-list">
@@ -15,6 +19,7 @@
 
     <div id="chat-container">
         <div id="chat-messages"></div>
+        <button id="load-more-messages">Load More Messages</button>
         <div id="user-list">
             <h3>Online Users</h3>
             <ul id="online-users">
@@ -48,31 +53,45 @@
     const leaderboardContent = document.getElementById('leaderboard-content');
     const highlightsList = document.getElementById('highlights-list');
     const onlineUsers = document.getElementById('online-users');
+    const loadMoreMessagesButton = document.getElementById('load-more-messages');
+
+    let lastMessageId = 0;
+    const messagesPerPage = 20;
 
     // Server-Sent Events for real-time chat and updates
     const eventSource = new EventSource("{{ url_for('get_messages') }}");
     eventSource.onmessage = function(event) {
         const data = JSON.parse(event.data);
-        if (data.type === 'chat') {
-            addChatMessage(data.message);
-        } else if (data.type === 'highlight') {
-            addHighlight(data.highlight);
-        } else if (data.type === 'users') {
-            updateOnlineUsers(data.users);
+        if (Array.isArray(data)) {
+            data.forEach(item => {
+                if (item.type === 'chat') {
+                    addChatMessage(item.message);
+                } else if (item.type === 'highlight') {
+                    addHighlight(item.highlight);
+                } else if (item.type === 'users') {
+                    updateOnlineUsers(item.users);
+                }
+            });
         }
     };
 
     function addChatMessage(message) {
         const messageElement = document.createElement('div');
         messageElement.className = 'chat-message';
-        messageElement.innerHTML = `<strong>${message.username}:</strong> ${message.message}`;
+        const timestamp = new Date(message.timestamp).toLocaleTimeString();
+        messageElement.innerHTML = `
+            <span class="chat-timestamp">[${timestamp}]</span>
+            <strong class="chat-username">${message.username}:</strong> 
+            <span class="chat-text">${message.message}</span>
+        `;
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        lastMessageId = Math.max(lastMessageId, message.id);
     }
 
     function addHighlight(highlight) {
         const highlightElement = document.createElement('li');
-        highlightElement.textContent = highlight;
+        highlightElement.textContent = highlight.highlight;
         highlightsList.appendChild(highlightElement);
     }
 
@@ -105,6 +124,30 @@
               })
               .catch(error => console.error('Error:', error));
         }
+    });
+
+    // Load more messages
+    loadMoreMessagesButton.addEventListener('click', function() {
+        fetch(`/get_more_messages?last_id=${lastMessageId}&limit=${messagesPerPage}`)
+            .then(response => response.json())
+            .then(data => {
+                data.messages.reverse().forEach(message => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'chat-message';
+                    const timestamp = new Date(message.timestamp).toLocaleTimeString();
+                    messageElement.innerHTML = `
+                        <span class="chat-timestamp">[${timestamp}]</span>
+                        <strong class="chat-username">${message.username}:</strong> 
+                        <span class="chat-text">${message.message}</span>
+                    `;
+                    chatMessages.insertBefore(messageElement, chatMessages.firstChild);
+                    lastMessageId = Math.min(lastMessageId, message.id);
+                });
+                if (data.messages.length < messagesPerPage) {
+                    loadMoreMessagesButton.style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Error:', error));
     });
 
     // Leaderboard functionality
