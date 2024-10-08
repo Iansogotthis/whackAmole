@@ -64,6 +64,11 @@
                   console.log("Server response:", data);
                   if (data.status === 'success') {
                       chatInput.value = '';
+                      const messageElement = document.createElement('div');
+                      messageElement.className = 'chat-message';
+                      messageElement.innerHTML = `<strong>${data.message.username}:</strong> ${data.message.message}`;
+                      chatMessages.appendChild(messageElement);
+                      chatMessages.scrollTop = chatMessages.scrollHeight;
                   }
               })
               .catch(error => console.error('Error:', error));
