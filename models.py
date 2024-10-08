@@ -10,7 +10,6 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255))
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -27,15 +26,6 @@ class HighScore(db.Model):
 
     user = db.relationship('User', backref=db.backref('high_scores', lazy=True))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.user.username,
-            'score': self.score,
-            'difficulty': self.difficulty,
-            'date': self.date.isoformat()
-        }
-
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -44,14 +34,6 @@ class ChatMessage(db.Model):
 
     user = db.relationship('User', backref=db.backref('messages', lazy=True))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.user.username,
-            'message': self.message,
-            'timestamp': self.timestamp.isoformat()
-        }
-
 class GameHighlight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -59,11 +41,3 @@ class GameHighlight(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('highlights', lazy=True))
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.user.username,
-            'highlight': self.highlight,
-            'timestamp': self.timestamp.isoformat()
-        }
