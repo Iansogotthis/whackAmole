@@ -5,25 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Whack-a-Mole{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="{{ 'logged-in' if current_user.is_authenticated else '' }}">
-    <nav class="navbar">
+<body class="{% if current_user.is_authenticated %}logged-in{% else %}logged-out{% endif %}">
+    <nav>
         <ul>
-            <li><a href="{{ url_for('index') }}">New Game</a></li>
-            <li><a href="{{ url_for('leaderboard') }}">Leaderboard</a></li>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
             {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('forum') }}">Forum</a></li>
                 <li><a href="{{ url_for('profile') }}">Profile</a></li>
-                <li><a href="{{ url_for('logout') }}">Logout ({{ current_user.username }})</a></li>
+                <li><a href="{{ url_for('forum') }}">Forum</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
             {% else %}
                 <li><a href="{{ url_for('login') }}">Login</a></li>
-                <li><a href="{{ url_for('register') }}">Sign up</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li>
             {% endif %}
         </ul>
     </nav>
-    <div id="content">
+    <main>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
         {% block content %}{% endblock %}
-    </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 Whack-a-Mole Game. All rights reserved.</p>
+    </footer>
     {% block scripts %}{% endblock %}
 </body>
 </html>
