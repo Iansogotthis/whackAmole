@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, f
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 from config import Config
 from sqlalchemy import func, text
 import json
@@ -48,6 +48,8 @@ class HighScore(db.Model):
     score = db.Column(db.Integer, nullable=False)
     difficulty = db.Column(db.String(10), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('high_scores', lazy=True))
 
     def __init__(self, user_id, score, difficulty):
         self.user_id = user_id
@@ -144,7 +146,9 @@ def login():
 
         if user and user.check_password(password):
             app.logger.info(f"User {username} authenticated successfully")
-            login_user(user)
+            login_user(user, remember=True)
+            session.permanent = True
+            app.permanent_session_lifetime = timedelta(days=7)
             app.logger.info(f"User {username} logged in, current_user.is_authenticated: {current_user.is_authenticated}")
             next_page = request.args.get('next')
             app.logger.info(f"Next page after login: {next_page}")
