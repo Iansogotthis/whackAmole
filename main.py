@@ -49,7 +49,7 @@ class HighScore(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     difficulty = db.Column(db.String(10), nullable=False)
-    date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('high_scores', lazy=True))
 
@@ -206,8 +206,7 @@ def submit_score():
         new_score = HighScore(
             user_id=current_user.id,
             score=data['score'],
-            difficulty=data['difficulty'],
-            date=datetime.utcnow()
+            difficulty=data['difficulty']
         )
         db.session.add(new_score)
         db.session.commit()
