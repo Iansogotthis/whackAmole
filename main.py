@@ -1,7 +1,7 @@
 import logging
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, Response, session
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_migrate import Migrate
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from config import Config
@@ -9,93 +9,18 @@ from sqlalchemy import func, text
 import json
 import time
 from urllib.parse import urlparse, urljoin
+from models import db, User, HighScore, ChatMessage, GameHighlight
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
 logging.basicConfig(level=logging.INFO)
 
-try:
-    db = SQLAlchemy(app)
-    with app.app_context():
-        db.create_all()
-except Exception as e:
-    app.logger.error(f"Database connection error: {str(e)}")
-    print(f"Error connecting to the database: {str(e)}")
+db.init_app(app)
+migrate = Migrate(app, db)
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255))
-
-    def __init__(self, username, email):
-        self.username = username
-        self.email = email
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-class HighScore(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    score = db.Column(db.Integer, nullable=False)
-    difficulty = db.Column(db.String(10), nullable=False)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user = db.relationship('User', backref=db.backref('high_scores', lazy=True))
-
-    def __init__(self, user_id, score, difficulty):
-        self.user_id = user_id
-        self.score = score
-        self.difficulty = difficulty
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.user.username,
-            'score': self.score,
-            'difficulty': self.difficulty,
-            'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
-        }
-
-class ChatMessage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    message = db.Column(db.String(500), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user = db.relationship('User', backref=db.backref('messages', lazy=True))
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.user.username,
-            'message': self.message,
-            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        }
-
-class GameHighlight(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    highlight = db.Column(db.String(500), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user = db.relationship('User', backref=db.backref('highlights', lazy=True))
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.user.username,
-            'highlight': self.highlight,
-            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        }
 
 online_users = set()
 
@@ -237,14 +162,12 @@ def submit_score():
     try:
         new_score = HighScore(user_id=current_user.id,
                               score=data['score'],
-                              difficulty=data['difficulty'],
-                              date=datetime.utcnow())
+                              difficulty=data['difficulty'])
         db.session.add(new_score)
         db.session.commit()
 
-        app.logger.info(f"Score submitted successfully: {new_score.to_dict()}")
+        app.logger.info(f"Score submitted successfully: {new_score.score}")
         
-        # Create a game highlight
         highlight = f"{current_user.username} scored {data['score']} points in {data['difficulty']} mode!"
         new_highlight = GameHighlight(user_id=current_user.id, highlight=highlight)
         db.session.add(new_highlight)
@@ -267,7 +190,7 @@ def get_leaderboard(difficulty):
     try:
         scores = HighScore.query.filter_by(difficulty=difficulty).order_by(
             HighScore.score.desc()).limit(10).all()
-        leaderboard = [score.to_dict() for score in scores]
+        leaderboard = [{'username': score.user.username, 'score': score.score, 'date': score.date.strftime('%Y-%m-%d %H:%M:%S')} for score in scores]
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
         return jsonify(leaderboard)
     except Exception as e:
@@ -325,15 +248,10 @@ def get_messages():
 def inject_user():
     return dict(user=current_user)
 
+@app.cli.command("init_db")
 def init_db():
-    with app.app_context():
-        db.create_all()
-        db.session.execute(
-            text(
-                'ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255);'
-            ))
-        db.session.commit()
+    db.create_all()
+    print("Database initialized.")
 
 if __name__ == "__main__":
-    init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
