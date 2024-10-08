@@ -234,8 +234,10 @@ def leaderboard():
 def get_leaderboard(difficulty):
     app.logger.info(f"Fetching leaderboard for difficulty: {difficulty}")
     try:
-        scores = HighScore.query.filter_by(difficulty=difficulty).order_by(
-            HighScore.score.desc()).limit(5).all()
+        if difficulty == 'all':
+            scores = HighScore.query.order_by(HighScore.score.desc()).limit(15).all()
+        else:
+            scores = HighScore.query.filter_by(difficulty=difficulty).order_by(HighScore.score.desc()).limit(5).all()
         leaderboard = [score.to_dict() for score in scores]
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
         return jsonify(leaderboard)
