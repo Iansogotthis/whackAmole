@@ -213,8 +213,8 @@ def send_message():
         new_message = ChatMessage(user_id=current_user.id, message=message)
         db.session.add(new_message)
         db.session.commit()
-        app.logger.info(f"Message saved to database: {new_message.to_dict()}")
-        return jsonify({'status': 'success', 'message': new_message.to_dict()}), 200
+        app.logger.info(f"Message saved to database: {new_message.id}")
+        return jsonify({'status': 'success', 'message': {'id': new_message.id, 'username': current_user.username, 'message': message, 'timestamp': new_message.timestamp.strftime('%Y-%m-%d %H:%M:%S')}}), 200
     app.logger.warning(f"Empty message received from {current_user.username}")
     return jsonify({'status': 'error', 'message': 'Empty message'}), 400
 
@@ -229,12 +229,12 @@ def get_messages():
             
             if messages:
                 last_id = messages[-1].id
-                message_data = [{'type': 'chat', 'message': msg.to_dict()} for msg in messages]
+                message_data = [{'type': 'chat', 'message': {'id': msg.id, 'username': msg.user.username, 'message': msg.message, 'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')}} for msg in messages]
                 yield f"data: {json.dumps(message_data)}\n\n"
             
             if highlights:
                 last_highlight_id = highlights[-1].id
-                highlight_data = [{'type': 'highlight', 'highlight': hl.to_dict()} for hl in highlights]
+                highlight_data = [{'type': 'highlight', 'highlight': hl.highlight} for hl in highlights]
                 yield f"data: {json.dumps(highlight_data)}\n\n"
             
             users_data = {'type': 'users', 'users': list(online_users)}
@@ -252,6 +252,12 @@ def inject_user():
 def init_db():
     db.create_all()
     print("Database initialized.")
+
+@app.before_request
+def update_last_seen():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -53,13 +53,15 @@
     const eventSource = new EventSource("{{ url_for('get_messages') }}");
     eventSource.onmessage = function(event) {
         const data = JSON.parse(event.data);
-        if (data.type === 'chat') {
-            addChatMessage(data.message);
-        } else if (data.type === 'highlight') {
-            addHighlight(data.highlight);
-        } else if (data.type === 'users') {
-            updateOnlineUsers(data.users);
-        }
+        data.forEach(item => {
+            if (item.type === 'chat') {
+                addChatMessage(item.message);
+            } else if (item.type === 'highlight') {
+                addHighlight(item.highlight);
+            } else if (item.type === 'users') {
+                updateOnlineUsers(item.users);
+            }
+        });
     };
 
     function addChatMessage(message) {
