@@ -81,6 +81,24 @@ class ChatMessage(db.Model):
             'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
         }
 
+class GameHighlight(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    highlight = db.Column(db.String(500), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('highlights', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.user.username,
+            'highlight': self.highlight,
+            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+online_users = set()
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -171,6 +189,7 @@ def login():
 @login_required
 def logout():
     app.logger.info(f"User {current_user.username} logged out")
+    online_users.discard(current_user.username)
     logout_user()
     return redirect(url_for('index'))
 
@@ -224,6 +243,13 @@ def submit_score():
         db.session.commit()
 
         app.logger.info(f"Score submitted successfully: {new_score.to_dict()}")
+        
+        # Create a game highlight
+        highlight = f"{current_user.username} scored {data['score']} points in {data['difficulty']} mode!"
+        new_highlight = GameHighlight(user_id=current_user.id, highlight=highlight)
+        db.session.add(new_highlight)
+        db.session.commit()
+
         return jsonify({'message': 'Score submitted successfully'}), 201
 
     except Exception as e:
@@ -240,7 +266,7 @@ def get_leaderboard(difficulty):
     app.logger.info(f"Fetching leaderboard for difficulty: {difficulty}")
     try:
         scores = HighScore.query.filter_by(difficulty=difficulty).order_by(
-            HighScore.score.desc()).limit(5).all()
+            HighScore.score.desc()).limit(10).all()
         leaderboard = [score.to_dict() for score in scores]
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
         return jsonify(leaderboard)
@@ -252,6 +278,7 @@ def get_leaderboard(difficulty):
 @login_required
 def forum():
     app.logger.info(f"User {current_user.username} accessed the forum")
+    online_users.add(current_user.username)
     return render_template('forum.html')
 
 @app.route("/send_message", methods=['POST'])
@@ -272,13 +299,24 @@ def send_message():
 def get_messages():
     def generate():
         last_id = 0
+        last_highlight_id = 0
         while True:
             messages = ChatMessage.query.filter(ChatMessage.id > last_id).order_by(ChatMessage.timestamp.asc()).all()
+            highlights = GameHighlight.query.filter(GameHighlight.id > last_highlight_id).order_by(GameHighlight.timestamp.asc()).all()
+            
             if messages:
                 last_id = messages[-1].id
-                message_data = [msg.to_dict() for msg in messages]
-                app.logger.info(f"Sending messages: {message_data}")
+                message_data = [{'type': 'chat', 'message': msg.to_dict()} for msg in messages]
                 yield f"data: {json.dumps(message_data)}\n\n"
+            
+            if highlights:
+                last_highlight_id = highlights[-1].id
+                highlight_data = [{'type': 'highlight', 'highlight': hl.to_dict()} for hl in highlights]
+                yield f"data: {json.dumps(highlight_data)}\n\n"
+            
+            users_data = {'type': 'users', 'users': list(online_users)}
+            yield f"data: {json.dumps([users_data])}\n\n"
+            
             time.sleep(1)
 
     return Response(generate(), mimetype='text/event-stream')
