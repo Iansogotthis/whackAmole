@@ -9,6 +9,7 @@ from sqlalchemy import func, text
 import json
 import time
 from urllib.parse import urlparse, urljoin
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -17,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 try:
     db = SQLAlchemy(app)
+    migrate = Migrate(app, db)
     with app.app_context():
         db.create_all()
 except Exception as e:
@@ -214,7 +216,8 @@ def submit_score():
     try:
         new_score = HighScore(user_id=current_user.id,
                               score=data['score'],
-                              difficulty=data['difficulty'])
+                              difficulty=data['difficulty'],
+                              date=datetime.utcnow())
         db.session.add(new_score)
         db.session.commit()
 
