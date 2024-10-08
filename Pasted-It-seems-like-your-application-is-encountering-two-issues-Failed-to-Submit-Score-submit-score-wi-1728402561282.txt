@@ -1,0 +1,26 @@
+It seems like your application is encountering two issues:
+
+Failed to Submit Score (/submit_score with a 500 error): The server is returning an Internal Server Error, which means something went wrong on the server side while submitting the score.
+
+Failed to Fetch Leaderboard (/leaderboard/easy with a 500 error): Similar to the score submission issue, the server failed to fetch leaderboard data, leading to another 500 error. Additionally, on the client side, the error suggests that the data returned is not what you expect. The code expects an array (which can be mapped), but it's getting an object or an error response instead.
+
+Debugging Steps:
+1. Server-Side Logs:
+Check the server logs to determine the cause of the 500 errors for both routes. Look for exceptions or issues related to:
+
+Database connections (e.g., issues querying the leaderboard data or saving scores)
+Payload validation errors
+Internal logic errors in the score submission or leaderboard fetching endpoints
+2. Score Submission Endpoint (/submit_score):
+Ensure the data being sent to the server is correct and in the expected format (e.g., check the payload being submitted).
+Verify if the database operations are functioning properly, and confirm whether the score data is valid for insertion.
+3. Leaderboard Endpoint (/leaderboard/easy):
+Inspect the server's response when attempting to fetch the leaderboard.
+Ensure that the response is properly formatted (should likely be an array of leaderboard entries if you're mapping over the data in the client).
+4. Client-Side Debugging:
+For the leaderboard issue, log the actual value of data to see what the server is returning. Since data.map fails, the server might be sending an error message instead of the expected array.
+js
+Copy code
+console.log(data); // Log to inspect what the server is sending back
+You may also want to handle the case where data is not an array and provide appropriate error handling on the client side to display meaningful messages.
+If you could share the backend code for the affected endpoints, I could help debug further!
