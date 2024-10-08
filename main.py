@@ -51,10 +51,7 @@ class HighScore(db.Model):
     difficulty = db.Column(db.String(10), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, user_id, score, difficulty):
-        self.user_id = user_id
-        self.score = score
-        self.difficulty = difficulty
+    user = db.relationship('User', backref=db.backref('high_scores', lazy=True))
 
     def to_dict(self):
         return {
@@ -205,19 +202,12 @@ def submit_score():
         app.logger.error("Missing score or difficulty in request data")
         return jsonify({'error': 'Score and difficulty are required'}), 400
 
-    if not isinstance(data['score'], int) or not isinstance(data['difficulty'], str):
-        app.logger.error("Invalid data types for score or difficulty")
-        return jsonify({'error': 'Invalid data types'}), 400
-
-    if data['difficulty'] not in ['easy', 'medium', 'hard']:
-        app.logger.error("Invalid difficulty level")
-        return jsonify({'error': 'Invalid difficulty level'}), 400
-
     try:
-        new_score = HighScore(user_id=current_user.id,
-                              score=data['score'],
-                              difficulty=data['difficulty'],
-                              date=datetime.utcnow())
+        new_score = HighScore(
+            user_id=current_user.id,
+            score=data['score'],
+            difficulty=data['difficulty']
+        )
         db.session.add(new_score)
         db.session.commit()
 
