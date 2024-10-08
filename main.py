@@ -9,7 +9,6 @@ from sqlalchemy import func, text
 import json
 import time
 from urllib.parse import urlparse, urljoin
-from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -18,7 +17,6 @@ logging.basicConfig(level=logging.INFO)
 
 try:
     db = SQLAlchemy(app)
-    migrate = Migrate(app, db)
     with app.app_context():
         db.create_all()
 except Exception as e:
@@ -51,7 +49,10 @@ class HighScore(db.Model):
     difficulty = db.Column(db.String(10), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship('User', backref=db.backref('high_scores', lazy=True))
+    def __init__(self, user_id, score, difficulty):
+        self.user_id = user_id
+        self.score = score
+        self.difficulty = difficulty
 
     def to_dict(self):
         return {
@@ -202,12 +203,18 @@ def submit_score():
         app.logger.error("Missing score or difficulty in request data")
         return jsonify({'error': 'Score and difficulty are required'}), 400
 
+    if not isinstance(data['score'], int) or not isinstance(data['difficulty'], str):
+        app.logger.error("Invalid data types for score or difficulty")
+        return jsonify({'error': 'Invalid data types'}), 400
+
+    if data['difficulty'] not in ['easy', 'medium', 'hard']:
+        app.logger.error("Invalid difficulty level")
+        return jsonify({'error': 'Invalid difficulty level'}), 400
+
     try:
-        new_score = HighScore(
-            user_id=current_user.id,
-            score=data['score'],
-            difficulty=data['difficulty']
-        )
+        new_score = HighScore(user_id=current_user.id,
+                              score=data['score'],
+                              difficulty=data['difficulty'])
         db.session.add(new_score)
         db.session.commit()
 
@@ -217,7 +224,7 @@ def submit_score():
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error submitting score: {str(e)}")
-        return jsonify({'error': 'Failed to submit score', 'details': str(e)}), 500
+        return jsonify({'error': 'Failed to submit score'}), 500
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -227,16 +234,14 @@ def leaderboard():
 def get_leaderboard(difficulty):
     app.logger.info(f"Fetching leaderboard for difficulty: {difficulty}")
     try:
-        if difficulty == 'all':
-            scores = HighScore.query.order_by(HighScore.score.desc()).limit(15).all()
-        else:
-            scores = HighScore.query.filter_by(difficulty=difficulty).order_by(HighScore.score.desc()).limit(5).all()
+        scores = HighScore.query.filter_by(difficulty=difficulty).order_by(
+            HighScore.score.desc()).limit(5).all()
         leaderboard = [score.to_dict() for score in scores]
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
         return jsonify(leaderboard)
     except Exception as e:
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
-        return jsonify({'error': 'Failed to fetch leaderboard', 'details': str(e)}), 500
+        return jsonify({'error': 'Failed to fetch leaderboard'}), 500
 
 @app.route("/forum")
 @login_required

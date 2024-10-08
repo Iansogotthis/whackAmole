@@ -5,7 +5,6 @@
 {% block content %}
     <h1>Leaderboard</h1>
     <div id="difficulty-buttons">
-        <button onclick="showLeaderboard('all')">All</button>
         <button onclick="showLeaderboard('easy')">Easy</button>
         <button onclick="showLeaderboard('medium')">Medium</button>
         <button onclick="showLeaderboard('hard')">Hard</button>
@@ -19,21 +18,19 @@
         fetch(`/leaderboard/${difficulty}`)
             .then(response => response.json())
             .then(data => {
-                let html = `<h2>${difficulty === 'all' ? 'All Difficulties' : difficulty.charAt(0).toUpperCase() + difficulty.slice(1) + ' Mode'}</h2>
+                let html = `<h2>${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Mode</h2>
                             <table>
                                 <tr>
                                     <th>Rank</th>
                                     <th>Player</th>
                                     <th>Score</th>
-                                    <th>Difficulty</th>
                                     <th>Date</th>
                                 </tr>`;
-                data.forEach((score, index) => {
+                data.slice(0, 5).forEach((score, index) => {
                     html += `<tr>
                                 <td>${index + 1}</td>
                                 <td>${score.username}</td>
                                 <td>${score.score}</td>
-                                <td>${score.difficulty}</td>
                                 <td>${score.date}</td>
                             </tr>`;
                 });
@@ -43,7 +40,7 @@
             .catch(error => console.error('Error:', error));
     }
 
-    // Load All leaderboard by default
-    showLeaderboard('all');
+    // Show Easy leaderboard by default
+    showLeaderboard('easy');
     </script>
 {% endblock %}

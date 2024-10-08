@@ -413,9 +413,7 @@ function submitScore(score, difficulty) {
         } else if (response.status === 401) {
             throw new Error('User not authenticated');
         } else {
-            return response.json().then(data => {
-                throw new Error(data.error || 'Failed to submit score');
-            });
+            throw new Error('Failed to submit score');
         }
     })
     .then(data => {
@@ -426,24 +424,16 @@ function submitScore(score, difficulty) {
         if (error.message === 'User not authenticated') {
             alert('Please log in to submit your score.');
         } else {
-            alert('There was an error submitting your score: ' + error.message);
+            alert('There was an error submitting your score. Please try again.');
         }
     });
 }
 
 function showLeaderboard(difficulty) {
     fetch(`/leaderboard/${difficulty}`)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to fetch leaderboard');
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
         console.log('Leaderboard data received:', data);
-        if (!Array.isArray(data)) {
-            throw new Error('Invalid leaderboard data received');
-        }
         const leaderboardHTML = `
             <h3>Leaderboard (${difficulty})</h3>
             <table>
@@ -467,7 +457,7 @@ function showLeaderboard(difficulty) {
     })
     .catch((error) => {
         console.error('Error fetching leaderboard:', error);
-        document.getElementById('leaderboard').innerHTML = `<p>Error loading leaderboard: ${error.message}. Please try again later.</p>`;
+        document.getElementById('leaderboard').innerHTML = '<p>Error loading leaderboard. Please try again later.</p>';
     });
 }
 
