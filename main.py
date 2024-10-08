@@ -217,7 +217,7 @@ def submit_score():
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error submitting score: {str(e)}")
-        return jsonify({'error': 'Failed to submit score'}), 500
+        return jsonify({'error': 'Failed to submit score', 'details': str(e)}), 500
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -236,7 +236,7 @@ def get_leaderboard(difficulty):
         return jsonify(leaderboard)
     except Exception as e:
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
-        return jsonify({'error': 'Failed to fetch leaderboard'}), 500
+        return jsonify({'error': 'Failed to fetch leaderboard', 'details': str(e)}), 500
 
 @app.route("/forum")
 @login_required
