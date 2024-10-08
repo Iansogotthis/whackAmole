@@ -35,8 +35,10 @@
     // Server-Sent Events for real-time chat
     const eventSource = new EventSource("{{ url_for('get_messages') }}");
     eventSource.onmessage = function(event) {
+        console.log("Received message from server:", event.data);
         const messages = JSON.parse(event.data);
         messages.forEach(message => {
+            console.log("Processing message:", message);
             const messageElement = document.createElement('div');
             messageElement.className = 'chat-message';
             messageElement.innerHTML = `<strong>${message.username}:</strong> ${message.message}`;
@@ -49,6 +51,7 @@
     chatForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const message = chatInput.value.trim();
+        console.log("Sending message:", message);
         if (message) {
             fetch("{{ url_for('send_message') }}", {
                 method: 'POST',
@@ -58,6 +61,7 @@
                 body: `message=${encodeURIComponent(message)}`
             }).then(response => response.json())
               .then(data => {
+                  console.log("Server response:", data);
                   if (data.status === 'success') {
                       chatInput.value = '';
                   }
