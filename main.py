@@ -19,6 +19,14 @@ logging.basicConfig(level=logging.INFO)
 db.init_app(app)
 migrate = Migrate(app, db)
 
+# Initialize database tables
+with app.app_context():
+    try:
+        db.create_all()
+        app.logger.info("Database tables created successfully")
+    except Exception as e:
+        app.logger.error(f"Error creating database tables: {e}")
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
@@ -133,9 +141,9 @@ def profile():
 
         app.logger.info(f"Profile data fetched successfully for user: {current_user.username}")
         return render_template('profile.html',
-                               user=current_user,
-                               highest_score=high_scores.score if high_scores else 0,
-                               user_stats=user_stats)
+                            user=current_user,
+                            highest_score=high_scores.score if high_scores else 0,
+                            user_stats=user_stats)
     except Exception as e:
         app.logger.error(f"Error fetching profile data for user {current_user.username}: {str(e)}")
         flash('An error occurred while loading your profile. Please try again later.')
@@ -161,8 +169,8 @@ def submit_score():
 
     try:
         new_score = HighScore(user_id=current_user.id,
-                              score=data['score'],
-                              difficulty=data['difficulty'])
+                            score=data['score'],
+                            difficulty=data['difficulty'])
         db.session.add(new_score)
         db.session.commit()
 
@@ -247,11 +255,6 @@ def get_messages():
 @app.context_processor
 def inject_user():
     return dict(user=current_user)
-
-@app.cli.command("init_db")
-def init_db():
-    db.create_all()
-    print("Database initialized.")
 
 @app.before_request
 def update_last_seen():
