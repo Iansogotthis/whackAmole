@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Whack-a-Mole</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Game</a>
+            <a href="{{ url_for('forum') }}">Forum</a>
+            <a href="{{ url_for('get_leaderboard', difficulty='easy') }}">Leaderboard</a>
+            <a href="{{ url_for('profile', username=current_user.username) }}">Profile</a>
+            <a href="{{ url_for('chat') }}" class="active">Chat</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </nav>
+
+    <div class="chat-container">
+        <div class="friends-sidebar">
+            <h2>Friends</h2>
+            <div class="friends-list">
+                {% for friend in current_user.friends_list %}
+                <div class="friend-item {% if friend.id == selected_friend.id %}active{% endif %}">
+                    <a href="{{ url_for('chat', friend_id=friend.id) }}">
+                        <i class="fas fa-user-circle"></i>
+                        <span class="friend-name">{{ friend.username }}</span>
+                        {% set unread = friend.sent_messages.filter_by(receiver_id=current_user.id, read=False).count() %}
+                        {% if unread > 0 %}
+                        <span class="unread-badge">{{ unread }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="chat-main">
+            {% if selected_friend %}
+            <div class="chat-header">
+                <h2>Chat with {{ selected_friend.username }}</h2>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                {% for message in messages %}
+                <div class="message {% if message.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+                    <div class="message-content">
+                        {{ message.content }}
+                    </div>
+                    <div class="message-time">
+                        {{ message.sent_at.strftime('%H:%M') }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="chat-input">
+                <form action="{{ url_for('send_message', friend_id=selected_friend.id) }}" method="POST">
+                    <input type="text" name="content" placeholder="Type your message..." required>
+                    <button type="submit">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="no-chat-selected">
+                <i class="fas fa-comments"></i>
+                <p>Select a friend to start chatting</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Auto-scroll to bottom of chat messages
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chat-messages');
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+        
+        // Call on page load
+        scrollToBottom();
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import os
 import logging
+import urllib.parse
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
@@ -10,8 +11,23 @@ class Config:
         logging.error("DATABASE_URL environment variable is not set")
         SQLALCHEMY_DATABASE_URI = None
     else:
-        # Handle the "postgres://" to "postgresql://" conversion for SQLAlchemy
-        SQLALCHEMY_DATABASE_URI = database_url.replace('postgres://', 'postgresql://', 1)
-        logging.info(f"Database URI configured successfully")
+        try:
+            # Handle the "postgres://" to "postgresql://" conversion for SQLAlchemy
+            if database_url.startswith('postgres://'):
+                parsed = urllib.parse.urlparse(database_url)
+                database_url = f'postgresql://{parsed.netloc}{parsed.path}'
+                if parsed.query:
+                    database_url = f'{database_url}?{parsed.query}'
+            
+            SQLALCHEMY_DATABASE_URI = database_url
+            logging.info("Database URI configured successfully")
+            
+        except Exception as e:
+            logging.error(f"Error configuring database URI: {str(e)}")
+            SQLALCHEMY_DATABASE_URI = None
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    @staticmethod
+    def init_app(app):
+        pass
