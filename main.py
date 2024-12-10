@@ -64,6 +64,14 @@ def get_leaderboard(difficulty):
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
+    if app.config['SQLALCHEMY_DATABASE_URI'] is None:
+        app.logger.error("Database URI is not configured. Please set DATABASE_URL environment variable.")
+    else:
+        try:
+            with app.app_context():
+                db.create_all()
+                app.logger.info("Database tables created successfully")
+        except Exception as e:
+            app.logger.error(f"Error creating database tables: {str(e)}")
+    
     app.run(host="0.0.0.0", port=5000, debug=True)
