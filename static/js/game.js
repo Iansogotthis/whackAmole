@@ -31,7 +31,7 @@ let lastMoleAppearance = 0;
 let selectedDifficulty = null;
 let powerUps = [];
 let activePowerUp = null;
-let powerUpDuration = 3000;
+let powerUpDuration = 3000; // Changed from 5000 to 3000 (3 seconds)
 let lastPowerUpSpawn = 0;
 
 const holeImage = new Image();
@@ -76,7 +76,7 @@ Promise.all([
 });
 
 function updateScore(points) {
-    const maxScore = 1000000;
+    const maxScore = 1000000; // Set a reasonable maximum score
     score = Math.min(score + points, maxScore);
     scoreValue.textContent = score;
 }
@@ -144,7 +144,7 @@ class PowerUp {
         this.visible = true;
         this.type = type;
         this.size = 40;
-        this.appearDuration = 5000;
+        this.appearDuration = 5000; // 5 seconds
         this.lastAppearance = Date.now();
     }
 
@@ -292,12 +292,14 @@ function applyPowerUpEffects() {
     if (!activePowerUp) return;
 
     if (activePowerUp.type === 'hammer') {
+        // Instead of doubling points, apply a more balanced effect
         moles.forEach(mole => {
             if (mole.visible) {
-                mole.points += 1;
+                mole.points += 1; // Increase points by 1 instead of doubling
             }
         });
     } else if (activePowerUp.type === 'freeze') {
+        // Keep the freeze effect as is
         moles.forEach(mole => {
             if (mole.visible) {
                 mole.appearDuration *= 1.5;
@@ -345,17 +347,7 @@ function gameLoop(currentTime) {
     }
 }
 
-function isUserLoggedIn() {
-    return document.body.classList.contains('logged-in');
-}
-
 function startGame() {
-    if (!isUserLoggedIn()) {
-        alert('Please log in to play the game.');
-        window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
-        return;
-    }
-
     console.log('Game started with difficulty:', selectedDifficulty);
     startScreen.style.display = 'none';
     gameScreen.style.display = 'block';
@@ -391,45 +383,52 @@ function endGame(isWin) {
         gameOverSound.play();
     }
     
-    submitScore(score, selectedDifficulty);
-    showLeaderboard(selectedDifficulty);
+    const nameForm = document.createElement('form');
+    nameForm.innerHTML = `
+        <input type="text" id="playerNameInput" placeholder="Enter your name" required>
+        <button type="submit">Submit Score</button>
+    `;
+    document.getElementById('leaderboard').before(nameForm);
+
+    nameForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const playerName = document.getElementById('playerNameInput').value;
+        if (playerName) {
+            submitScore(playerName, score, selectedDifficulty);
+            nameForm.remove();
+            showLeaderboard(selectedDifficulty);
+        }
+    });
+
+    console.log('End game screen displayed, waiting for player name input');
 }
 
-function submitScore(score, difficulty) {
-    console.log('Submitting score:', { score, difficulty });
+function submitScore(playerName, score, difficulty) {
+    console.log('Submitting score:', { playerName, score, difficulty });
     fetch('/submit_score', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+            player_name: playerName,
             score: score,
             difficulty: difficulty
         }),
     })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else if (response.status === 401) {
-            throw new Error('User not authenticated');
-        } else {
-            throw new Error('Failed to submit score');
-        }
-    })
+    .then(response => response.json())
     .then(data => {
         console.log('Score submitted successfully:', data);
+        showLeaderboard(difficulty);
     })
     .catch((error) => {
         console.error('Error submitting score:', error);
-        if (error.message === 'User not authenticated') {
-            alert('Please log in to submit your score.');
-        } else {
-            alert('There was an error submitting your score. Please try again.');
-        }
+        alert('There was an error submitting your score. Please try again.');
     });
 }
 
 function showLeaderboard(difficulty) {
+    console.log('Fetching leaderboard for difficulty:', difficulty);
     fetch(`/leaderboard/${difficulty}`)
     .then(response => response.json())
     .then(data => {
@@ -446,7 +445,7 @@ function showLeaderboard(difficulty) {
                 ${data.map((score, index) => `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${score.username}</td>
+                        <td>${score.player_name}</td>
                         <td>${score.score}</td>
                         <td>${score.date}</td>
                     </tr>
