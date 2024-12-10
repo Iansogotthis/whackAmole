@@ -8,10 +8,24 @@ class Config:
     # Configure database URL with proper error handling
     database_url = os.environ.get('DATABASE_URL')
     if database_url is None:
-        logging.error("DATABASE_URL environment variable is not set")
-        SQLALCHEMY_DATABASE_URI = None
-    else:
-        try:
+        # Construct URL from individual parameters if DATABASE_URL is not set
+        db_params = {
+            'user': os.environ.get('PGUSER'),
+            'password': os.environ.get('PGPASSWORD'),
+            'host': os.environ.get('PGHOST'),
+            'port': os.environ.get('PGPORT'),
+            'database': os.environ.get('PGDATABASE')
+        }
+        
+        if all(db_params.values()):
+            database_url = f"postgresql://{db_params['user']}:{db_params['password']}@{db_params['host']}:{db_params['port']}/{db_params['database']}"
+            logging.info("Database URI constructed from individual parameters")
+        else:
+            logging.error("Required database environment variables are not set")
+            database_url = None
+    
+    try:
+        if database_url:
             # Handle the "postgres://" to "postgresql://" conversion for SQLAlchemy
             if database_url.startswith('postgres://'):
                 parsed = urllib.parse.urlparse(database_url)
@@ -21,10 +35,12 @@ class Config:
             
             SQLALCHEMY_DATABASE_URI = database_url
             logging.info("Database URI configured successfully")
-            
-        except Exception as e:
-            logging.error(f"Error configuring database URI: {str(e)}")
+        else:
             SQLALCHEMY_DATABASE_URI = None
+            
+    except Exception as e:
+        logging.error(f"Error configuring database URI: {str(e)}")
+        SQLALCHEMY_DATABASE_URI = None
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
