@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whack-a-Mole Forum</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Game</a>
+            <a href="{{ url_for('forum') }}" class="active">Forum</a>
+            <a href="{{ url_for('get_leaderboard', difficulty='easy') }}">Leaderboard</a>
+        </div>
+    </nav>
+
+    <div class="forum-container">
+        <h1>Game Discussion Forum</h1>
+        
+        <div class="create-post">
+            <h2>Create New Post</h2>
+            <form id="post-form" method="POST" action="{{ url_for('create_post') }}">
+                <input type="text" name="title" placeholder="Post Title" required>
+                <textarea name="content" placeholder="Your message..." required></textarea>
+                <button type="submit">Post</button>
+            </form>
+        </div>
+
+        <div class="forum-posts">
+            <h2>Recent Posts</h2>
+            {% for post in posts %}
+            <div class="post">
+                <h3>{{ post.title }}</h3>
+                <p class="post-meta">Posted by {{ post.author }} on {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p class="post-content">{{ post.content }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="leaderboard-section">
+            <h2>Top Players</h2>
+            <div class="top-scores">
+                {% for score in top_scores %}
+                <div class="score-entry">
+                    <span class="player">{{ score.player_name }}</span>
+                    <span class="points">{{ score.score }} pts</span>
+                    <span class="difficulty">({{ score.difficulty }})</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

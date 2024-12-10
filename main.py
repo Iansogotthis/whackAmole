@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from config import Config
@@ -28,6 +28,13 @@ class HighScore(db.Model):
             'difficulty': self.difficulty,
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
         }
+
+class ForumPost(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    author = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 @app.route("/")
 def index():
@@ -62,6 +69,32 @@ def get_leaderboard(difficulty):
     except Exception as e:
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
         return jsonify({'error': 'Failed to fetch leaderboard'}), 500
+
+@app.route("/forum")
+def forum():
+    try:
+        posts = ForumPost.query.order_by(ForumPost.created_at.desc()).all()
+        top_scores = HighScore.query.order_by(HighScore.score.desc()).limit(5).all()
+        return render_template("forum.html", posts=posts, top_scores=top_scores)
+    except Exception as e:
+        app.logger.error(f"Error accessing forum: {str(e)}")
+        return render_template("forum.html", posts=[], top_scores=[])
+
+@app.route("/create_post", methods=['POST'])
+def create_post():
+    try:
+        new_post = ForumPost(
+            title=request.form['title'],
+            content=request.form['content'],
+            author="Anonymous"  # For now, we'll use Anonymous as the author
+        )
+        db.session.add(new_post)
+        db.session.commit()
+        app.logger.info(f"New forum post created: {new_post.title}")
+        return redirect(url_for('forum'))
+    except Exception as e:
+        app.logger.error(f"Error creating forum post: {str(e)}")
+        return redirect(url_for('forum'))
 
 if __name__ == "__main__":
     if app.config['SQLALCHEMY_DATABASE_URI'] is None:
