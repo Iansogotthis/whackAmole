@@ -443,7 +443,12 @@ function submitScore(playerName, score, difficulty) {
 
 function showLeaderboard(difficulty) {
     console.log('Fetching leaderboard for difficulty:', difficulty);
-    fetch(`/leaderboard/${difficulty}`)
+    fetch(`/leaderboard/${difficulty}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
     .then(response => response.json())
     .then(data => {
         console.log('Leaderboard data received:', data);
