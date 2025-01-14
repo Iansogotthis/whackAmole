@@ -76,6 +76,33 @@
 .friend-button.remove {
     background: #f44336;
 }
+
+.card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.emoji-greetings {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.emoji-btn {
+    padding: 5px 10px;
+    font-size: 18px;
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.emoji-btn:hover {
+    transform: scale(1.1);
+    background: #f5f5f5;
+}
 </style>
 
 <script>
@@ -103,12 +130,43 @@ function displayResults(results) {
             <h3>${user.username}</h3>
             <p>${user.email}</p>
             <p>Games played: ${user.games_played}</p>
-            <button onclick="toggleFriend('${user.username}', this)" 
-                    class="friend-button ${user.is_friend ? 'remove' : 'add'}">
-                ${user.is_friend ? 'Remove Friend' : 'Add Friend'}
-            </button>
+            <div class="card-actions">
+                <button onclick="toggleFriend('${user.username}', this)" 
+                        class="friend-button ${user.is_friend ? 'remove' : 'add'}">
+                    ${user.is_friend ? 'Remove Friend' : 'Add Friend'}
+                </button>
+                ${user.is_friend ? `
+                <div class="emoji-greetings">
+                    <button onclick="sendEmoji('${user.username}', '🖐️')" class="emoji-btn" title="High Five">🖐️</button>
+                    <button onclick="sendEmoji('${user.username}', '👊')" class="emoji-btn" title="Fist Bump">👊</button>
+                    <button onclick="sendEmoji('${user.username}', '😉')" class="emoji-btn" title="Wink">😉</button>
+                    <button onclick="sendEmoji('${user.username}', '😊')" class="emoji-btn" title="Smile">😊</button>
+                    <button onclick="sendEmoji('${user.username}', '😢')" class="emoji-btn" title="Sad">😢</button>
+                </div>
+                ` : ''}
+            </div>
         </div>
     `).join('');
+}
+
+async function sendEmoji(username, emoji) {
+    try {
+        const response = await fetch('/send_emoji', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                emoji: emoji
+            })
+        });
+        if (response.ok) {
+            alert(`Sent ${emoji} to ${username}!`);
+        }
+    } catch (error) {
+        console.error('Error sending emoji:', error);
+    }
 }
 
 async function toggleFriend(username, button) {
