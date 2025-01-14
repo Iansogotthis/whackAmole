@@ -29,16 +29,13 @@ def create_app():
     # Initialize database tables
     with app.app_context():
         try:
-            db.session.execute(db.text('DROP SCHEMA public CASCADE'))
-            db.session.execute(db.text('CREATE SCHEMA public'))
+            db.create_all()  # Create tables if they don't exist
             db.session.commit()
-            db.create_all()  # Recreate tables with current schema
-            db.session.commit()  # Commit the changes
             migrate.init_app(app, db)  # Initialize migrations
-            app.logger.info("Database tables created successfully")
+            app.logger.info("Database tables initialized successfully")
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f"Error creating database tables: {str(e)}")
+            app.logger.error(f"Error initializing database tables: {str(e)}")
 
     return app
 
