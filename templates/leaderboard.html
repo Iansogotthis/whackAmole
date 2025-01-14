@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard | Whack-a-Mole</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('index') }}">Game</a>
+                <a href="{{ url_for('forum') }}">Forum</a>
+                <a href="{{ url_for('get_leaderboard', difficulty='easy') }}" class="active">Leaderboard</a>
+                <a href="{{ url_for('profile', username=current_user.username) }}">Profile</a>
+                <a href="{{ url_for('logout') }}" style="color: #ff4444;">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+    <div class="leaderboard-container">
+        <h1>Leaderboard</h1>
+        <div class="difficulty-tabs">
+            <a href="{{ url_for('get_leaderboard', difficulty='easy') }}" class="tab {% if current_difficulty == 'easy' %}active{% endif %}">Easy</a>
+            <a href="{{ url_for('get_leaderboard', difficulty='medium') }}" class="tab {% if current_difficulty == 'medium' %}active{% endif %}">Medium</a>
+            <a href="{{ url_for('get_leaderboard', difficulty='hard') }}" class="tab {% if current_difficulty == 'hard' %}active{% endif %}">Hard</a>
+        </div>
+        <div class="leaderboard-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score in leaderboard_scores %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ score.player_name }}</td>
+                        <td>{{ score.score }}</td>
+                        <td>{{ score.date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

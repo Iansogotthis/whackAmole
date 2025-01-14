@@ -32,7 +32,7 @@ def submit_score():
         data = request.get_json()
         if not data or 'score' not in data or 'difficulty' not in data:
             return jsonify({"error": "Missing required fields"}), 400
-        
+
         score = HighScore(
             user_id=current_user.id,
             score=data['score'],
@@ -57,7 +57,7 @@ def get_leaderboard(difficulty):
             return jsonify({
                 "scores": [score.to_dict() for score in scores]
             })
-        return render_template('index.html', leaderboard_scores=scores, current_difficulty=difficulty)
+        return render_template('leaderboard.html', leaderboard_scores=scores, current_difficulty=difficulty)
     except Exception as e:
         app.logger.error(f"Error accessing leaderboard: {str(e)}")
         return jsonify({"error": str(e)}), 400
@@ -158,11 +158,11 @@ def register():
             if len(username) < 3:
                 flash('Username must be at least 3 characters long')
                 return redirect(url_for('register'))
-            
+
             if len(username) > 20:
                 flash('Username must be less than 20 characters')
                 return redirect(url_for('register'))
-                
+
             if not username.isalnum():
                 flash('Username must contain only letters and numbers')
                 return redirect(url_for('register'))
