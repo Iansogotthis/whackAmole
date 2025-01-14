@@ -92,6 +92,11 @@ def profile(username):
         ).order_by(ChatMessage.sent_at.asc()).all()
     return render_template("profile.html", user=user, messages=messages)
 
+@app.route("/chat")
+@login_required
+def chat():
+    return render_template("chat.html")
+
 @app.route("/logout")
 @login_required
 def logout():
