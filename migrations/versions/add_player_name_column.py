@@ -1,16 +1,16 @@
 
-"""add player_name column
+"""add player name column
 
-Revision ID: add_player_name_column
-Revises: d642883f60f2
-Create Date: 2025-01-14 21:10:00.000000
+Revision ID: be4c3f2e9a1d
+Revises: 
+Create Date: 2025-01-14 21:20:00.000000
 
 """
 from alembic import op
 import sqlalchemy as sa
 
-revision = 'add_player_name_column'
-down_revision = 'd642883f60f2'
+revision = 'be4c3f2e9a1d'
+down_revision = None
 branch_labels = None
 depends_on = None
 
