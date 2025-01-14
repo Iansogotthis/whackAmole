@@ -1,30 +1,27 @@
 
-from flask import Flask
-import os
-import socket
+from flask import Flask, render_template, request, redirect, url_for
+from config import Config
+from app import create_app, db
 
-app = Flask(__name__)
+app = create_app()
 
 @app.route('/')
 def index():
-    return 'Flask server is running successfully'
+    return render_template('index.html')
 
-def is_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('0.0.0.0', port)) == 0
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
-def find_available_port(start_port=5000, max_port=9000):
-    port = start_port
-    while port < max_port:
-        if not is_port_in_use(port):
-            return port
-        port += 1
-    return None
+@app.route('/register')
+def register():
+    return render_template('register.html')
 
 if __name__ == '__main__':
-    port = find_available_port()
-    if port:
-        print(f"Starting server on port {port}")
-        app.run(host='0.0.0.0', port=port, debug=True)
-    else:
-        print("No available ports found between 5000-9000")
+    with app.app_context():
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"Database initialization error: {e}")
+    
+    app.run(host='0.0.0.0', port=5000, debug=True)
