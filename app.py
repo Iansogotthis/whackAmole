@@ -146,7 +146,6 @@ class ForumPost(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 @app.route("/")
-@login_required
 def index():
     return render_template("index.html")
 

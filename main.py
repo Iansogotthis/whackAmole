@@ -1,6 +1,5 @@
 
-from flask import Flask, render_template, request, redirect, url_for
-from config import Config
+from flask import Flask, render_template
 from app import create_app, db
 
 app = create_app()
@@ -9,13 +8,9 @@ app = create_app()
 def index():
     return render_template('index.html')
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
-
-@app.route('/register')
-def register():
-    return render_template('register.html')
+@app.route('/game')
+def game():
+    return render_template('index.html')
 
 if __name__ == '__main__':
     with app.app_context():
