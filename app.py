@@ -358,16 +358,20 @@ def login():
 
     return render_template('login.html')
 
-@app.route("/search_users", methods=['GET'])
+@app.route("/find_friends", methods=['GET'])
 @login_required
-def search_users():
+def find_friends():
     query = request.args.get('query', '')
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         if query:
             try:
-                users = User.query.filter(User.username.ilike(f'%{query}%')).all()
+                users = User.query.filter(
+                    (User.username.ilike(f'%{query}%')) | 
+                    (User.email.ilike(f'%{query}%'))
+                ).all()
                 results = [{
                     'username': user.username,
+                    'email': user.email,
                     'id': user.id,
                     'games_played': user.games_played,
                     'is_friend': user in current_user.friends_list
@@ -377,7 +381,7 @@ def search_users():
                 app.logger.error(f"Search error: {str(e)}")
                 return jsonify({'error': 'Search failed'}), 500
         return jsonify([])
-    return render_template('search.html')
+    return render_template('find_friends.html')
 
 @app.route("/send_emoji", methods=['POST'])
 @login_required

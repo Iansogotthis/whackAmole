@@ -106,14 +106,16 @@
                 </article>
 
                 <article class="friends-section">
-    <h2>Find Players</h2>
-    <div class="search-box">
-        <input type="text" id="userSearch" placeholder="Search players...">
-        <button onclick="searchUsers()"><i class="fas fa-search"></i></button>
-    </div>
-    <div class="friends-grid" id="searchResults">
-        <!-- Search results will appear here -->
-    </div>
+    <h2><a href="{{ url_for('find_friends') }}" class="find-friends-link">Find Friends</a></h2>
+    <style>
+        .find-friends-link {
+            color: inherit;
+            text-decoration: none;
+        }
+        .find-friends-link:hover {
+            text-decoration: underline;
+        }
+    </style>
     <h2>Friends</h2>
     <div class="friends-grid">
         {% for friend in user.friends_list %}
