@@ -161,17 +161,15 @@ def send_message_any():
 @login_required
 def search_users():
     query = request.args.get('query', '')
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        if query:
-            users = User.query.filter(User.username.ilike(f'%{query}%')).all()
-            results = [{
-                'username': user.username,
-                'id': user.id,
-                'is_friend': user in current_user.friends_list
-            } for user in users if user != current_user]
-            return jsonify(results)
-        return jsonify([])
-    return render_template('search.html', users=[], query=query)
+    if query:
+        users = User.query.filter(User.username.ilike(f'%{query}%')).all()
+        results = [{
+            'username': user.username,
+            'id': user.id,
+            'is_friend': user in current_user.friends_list
+        } for user in users if user != current_user]
+        return jsonify(results)
+    return jsonify([])
 
 
 @app.route("/send_friend_request/<int:user_id>", methods=['POST'])
