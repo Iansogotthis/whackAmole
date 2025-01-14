@@ -359,18 +359,23 @@ def login():
 
     return render_template('login.html')
 
-@app.route("/search_users")
+@app.route("/search_users", methods=['GET'])
 @login_required
 def search_users():
     query = request.args.get('query', '')
     if query:
-        users = User.query.filter(User.username.ilike(f'%{query}%')).all()
-        results = [{
-            'username': user.username,
-            'id': user.id,
-            'is_friend': user in current_user.friends_list
-        } for user in users if user != current_user]
-        return jsonify(results)
+        try:
+            users = User.query.filter(User.username.ilike(f'%{query}%')).all()
+            results = [{
+                'username': user.username,
+                'id': user.id,
+                'games_played': user.games_played,
+                'is_friend': user in current_user.friends_list
+            } for user in users if user != current_user]
+            return jsonify(results)
+        except Exception as e:
+            app.logger.error(f"Search error: {str(e)}")
+            return jsonify({'error': 'Search failed'}), 500
     return jsonify([])
 
 @app.route("/send_emoji", methods=['POST'])
