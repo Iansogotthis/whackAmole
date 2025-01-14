@@ -17,6 +17,7 @@ login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
+login_manager.session_protection = 'strong'
 
 def create_app():
     app = Flask(__name__)
@@ -148,6 +149,7 @@ class ForumPost(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 @app.route("/")
+@login_required
 def index():
     return render_template("index.html")
 
@@ -191,6 +193,7 @@ def get_leaderboard(difficulty):
         return jsonify({'error': 'Failed to fetch leaderboard', 'scores': []}), 500
 
 @app.route("/forum")
+@login_required
 def forum():
     try:
         posts = ForumPost.query.order_by(ForumPost.created_at.desc()).all()
