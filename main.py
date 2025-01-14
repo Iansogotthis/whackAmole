@@ -1,10 +1,9 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from app import create_app, db, User, ForumPost, HighScore, ChatMessage
+from app import app, db, User, ForumPost, HighScore, ChatMessage
 from flask_login import LoginManager
 
-app = create_app()
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -268,4 +267,6 @@ def register():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    with app.app_context():
+        db.create_all()
+    app.run(host='0.0.0.0', port=8080, debug=True)
