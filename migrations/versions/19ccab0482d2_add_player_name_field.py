@@ -18,17 +18,19 @@ depends_on = None
 
 
 def upgrade():
-    # Add column as nullable first
+    # Add the column as nullable first
     op.add_column('user', sa.Column('player_name', sa.String(length=64), nullable=True))
     
-    # Set player_name to username for existing records
-    op.execute('UPDATE "user" SET player_name = username')
+    # Update existing records
+    op.execute("UPDATE \"user\" SET player_name = username WHERE player_name IS NULL")
     
-    # Make column non-nullable
-    op.alter_column('user', 'player_name',
-                    existing_type=sa.String(length=64),
-                    nullable=False)
+    # Make the column non-nullable
+    with op.batch_alter_table('user') as batch_op:
+        batch_op.alter_column('player_name',
+                           existing_type=sa.String(length=64),
+                           nullable=False)
 
 
 def downgrade():
-    op.drop_column('user', 'player_name')
+    with op.batch_alter_table('user') as batch_op:
+        batch_op.drop_column('player_name')
