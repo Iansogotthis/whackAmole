@@ -21,24 +21,7 @@ def game():
 
 
 
-@app.route('/leaderboard/<difficulty>')
-@login_required
-def get_leaderboard(difficulty):
-    try:
-        scores = HighScore.query.filter_by(difficulty=difficulty) \
-            .order_by(HighScore.score.desc()) \
-            .limit(10) \
-            .all()
-        if request.headers.get(
-                'Accept') == 'application/json' or request.headers.get(
-                    'X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({"scores": [score.to_dict() for score in scores]})
-        return render_template('leaderboard.html',
-                               leaderboard_scores=scores,
-                               current_difficulty=difficulty)
-    except Exception as e:
-        app.logger.error(f"Error accessing leaderboard: {str(e)}")
-        return jsonify({"error": str(e)}), 400
+
 
 
 @app.route("/forum")
