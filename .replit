@@ -51,6 +51,7 @@ waitForPort = 5000
 
 [deployment]
 run = ["sh", "-c", "python main.py --ui login register"]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 80
