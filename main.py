@@ -20,26 +20,6 @@ def game():
     return render_template('index.html')
 
 
-@app.route('/submit_score', methods=['POST'])
-@login_required
-def submit_score():
-    try:
-        if not request.is_json:
-            return jsonify({"error": "Content type must be application/json"}), 400
-        data = request.get_json()
-        if not data or 'score' not in data or 'difficulty' not in data:
-            return jsonify({"error": "Missing required fields"}), 400
-
-        score = HighScore(user_id=current_user.id,
-                          score=data['score'],
-                          difficulty=data['difficulty'])
-        db.session.add(score)
-        db.session.commit()
-        return jsonify({"success": True})
-    except Exception as e:
-        app.logger.error(f"Error submitting score: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
 
 @app.route('/leaderboard/<difficulty>')
 @login_required
