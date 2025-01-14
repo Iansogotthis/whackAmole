@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from app import create_app, db, User, ForumPost, HighScore
+from app import create_app, db, User, ForumPost, HighScore, ChatMessage
 from flask_login import LoginManager
 
 app = create_app()
@@ -109,54 +109,60 @@ def register():
         return redirect(url_for('index'))
 
     if request.method == 'POST':
-        username = request.form['username'].strip()
-        email = request.form['email'].strip()
-        password = request.form['password']
+        try:
+            username = request.form['username'].strip()
+            email = request.form['email'].strip()
+            password = request.form['password']
 
-        # Username validation
-        if len(username) < 3:
-            flash('Username must be at least 3 characters long')
-            return redirect(url_for('register'))
-        
-        if len(username) > 20:
-            flash('Username must be less than 20 characters')
-            return redirect(url_for('register'))
+            # Username validation
+            if len(username) < 3:
+                flash('Username must be at least 3 characters long')
+                return redirect(url_for('register'))
             
-        if not username.isalnum():
-            flash('Username must contain only letters and numbers')
+            if len(username) > 20:
+                flash('Username must be less than 20 characters')
+                return redirect(url_for('register'))
+                
+            if not username.isalnum():
+                flash('Username must contain only letters and numbers')
+                return redirect(url_for('register'))
+
+            # Password validation
+            if len(password) < 6:
+                flash('Password must be at least 6 characters long')
+                return redirect(url_for('register'))
+
+            if len(password) > 50:
+                flash('Password is too long')
+                return redirect(url_for('register'))
+
+            # Email validation 
+            if not '@' in email or not '.' in email:
+                flash('Please enter a valid email address')
+                return redirect(url_for('register'))
+
+            # Check if username exists
+            if User.query.filter_by(username=username).first():
+                flash('Username already exists')
+                return redirect(url_for('register'))
+
+            # Check if email exists
+            if User.query.filter_by(email=email).first():
+                flash('Email already registered')
+                return redirect(url_for('register'))
+
+            user = User(username=username, email=email)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+
+            login_user(user)
+            return redirect(url_for('index'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Registration error: {str(e)}")
+            flash('An error occurred during registration. Please try again.')
             return redirect(url_for('register'))
-
-        # Password validation
-        if len(password) < 6:
-            flash('Password must be at least 6 characters long')
-            return redirect(url_for('register'))
-
-        if len(password) > 50:
-            flash('Password is too long')
-            return redirect(url_for('register'))
-
-        # Email validation 
-        if not '@' in email or not '.' in email:
-            flash('Please enter a valid email address')
-            return redirect(url_for('register'))
-
-        # Check if username exists
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists')
-            return redirect(url_for('register'))
-
-        # Check if email exists
-        if User.query.filter_by(email=email).first():
-            flash('Email already registered')
-            return redirect(url_for('register'))
-
-        user = User(username=username, email=email)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-
-        login_user(user)
-        return redirect(url_for('index'))
 
     return render_template('register.html')
 
@@ -164,7 +170,9 @@ if __name__ == '__main__':
     with app.app_context():
         try:
             db.create_all()
+            db.session.commit()
         except Exception as e:
             print(f"Database initialization error: {e}")
+            db.session.rollback()
 
     app.run(host='0.0.0.0', port=3000, debug=True)
