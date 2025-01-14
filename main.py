@@ -203,7 +203,13 @@ def create_post():
 @login_required
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template("profile.html", user=user)
+    messages = []
+    if user != current_user:
+        messages = ChatMessage.query.filter(
+            ((ChatMessage.sender_id == current_user.id) & (ChatMessage.receiver_id == user.id)) |
+            ((ChatMessage.sender_id == user.id) & (ChatMessage.receiver_id == current_user.id))
+        ).order_by(ChatMessage.sent_at.asc()).all()
+    return render_template("profile.html", user=user, messages=messages)
 
 @app.route("/add_friend/<username>", methods=['POST'])
 @login_required
