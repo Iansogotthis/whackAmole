@@ -368,4 +368,8 @@ if __name__ == "__main__":
         except Exception as e:
             app.logger.error(f"Error creating database tables: {str(e)}")
     
-    app.run(host="0.0.0.0", port=3000, debug=True)
+    try:
+        app.run(host="0.0.0.0", port=5000, debug=True)
+    except OSError as e:
+        print(f"Error starting server: {e}")
+        print("Try using a different port or ensure no other process is using port 5000")
