@@ -7,59 +7,44 @@ A web-based Whack-a-Mole game using Flask and JavaScript with HTML5 Canvas.
 - Python 3.7 or higher
 - PostgreSQL database (provided by Replit)
 
-## Setup on Replit
+## Build and Deployment Steps
 
-1. Fork this Repl to your Replit account.
+1. Install Dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-2. The required packages are already installed in the Replit environment.
+2. Initialize Database:
+```bash
+python -c "from main import app, db; app.app_context().push(); db.create_all()"
+```
 
-3. The database is automatically set up by Replit.
+3. Run Migrations:
+```bash
+flask db upgrade
+```
 
-## Running the Application on Replit
+4. Run Application:
+```bash
+python main.py
+```
+
+The application will be available on port 8080.
+
+
+## Running on Replit
 
 1. Click the "Run" button at the top of the Replit interface.
+2. The server will start automatically on port 8080.
+3. Access the game through the webview or open in a new tab.
 
-2. Once the server starts, you can play the game in the webview or open it in a new tab.
+## Deployment on Replit
 
-## Local Setup (for development outside Replit)
+1. Click the "Deploy" button in the toolbar
+2. Select "Deploy to Production"
+3. Wait for the deployment process to complete
+4. Access your deployed game using the provided URL
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/whack-a-mole.git
-   cd whack-a-mole
-   ```
-
-2. Create a virtual environment and activate it:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
-
-3. Install the required packages:
-   ```
-   pip install -r requirements.txt
-   ```
-
-4. Set up your PostgreSQL database and update the DATABASE_URL environment variable:
-   ```
-   export DATABASE_URL=postgresql://username:password@localhost:5432/whack_a_mole
-   ```
-   Replace `username`, `password`, and `whack_a_mole` with your PostgreSQL credentials and database name.
-
-5. Initialize the database:
-   ```
-   python
-   >>> from main import db
-   >>> db.create_all()
-   >>> exit()
-   ```
-
-6. Start the Flask development server:
-   ```
-   python main.py
-   ```
-
-7. Open a web browser and navigate to `http://localhost:5000` to play the game.
 
 ## Game Instructions
 
