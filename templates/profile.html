@@ -106,21 +106,94 @@
                 </article>
 
                 <article class="friends-section">
-                    <h2>Friends</h2>
-                    <div class="friends-grid">
-                        {% for friend in user.friends_list %}
-                        <div class="friend-card">
-                            <a
-                                href="{{ url_for('profile', username=friend.username) }}"
-                            >
-                                <i class="fas fa-user-circle"></i>
-                                <h3>{{ friend.username }}</h3>
-                                <p>Games: {{ friend.games_played }}</p>
-                            </a>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </article>
+    <h2>Find Players</h2>
+    <div class="search-box">
+        <input type="text" id="userSearch" placeholder="Search players...">
+        <button onclick="searchUsers()"><i class="fas fa-search"></i></button>
+    </div>
+    <div class="friends-grid" id="searchResults">
+        <!-- Search results will appear here -->
+    </div>
+    <h2>Friends</h2>
+    <div class="friends-grid">
+        {% for friend in user.friends_list %}
+        <div class="friend-card">
+            <i class="fas fa-user-circle"></i>
+            <h3>{{ friend.username }}</h3>
+            <p>Games: {{ friend.games_played }}</p>
+            <div class="friend-actions">
+                <button onclick="sendGreeting('{{ friend.username }}')">Send Greeting</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</article>
+
+<!-- User Profile Modal -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modalUsername"></h2>
+        <div id="modalActions">
+            <button id="friendRequestBtn"></button>
+            <button onclick="sendGreeting(modalUsername.textContent)">Send Greeting</button>
+            <button class="close-btn">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function searchUsers() {
+    const query = document.getElementById('userSearch').value;
+    const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
+    const users = await response.json();
+    displaySearchResults(users);
+}
+
+function displaySearchResults(users) {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = users.map(user => `
+        <div class="friend-card" onclick="showUserModal('${user.username}', ${user.is_friend})">
+            <i class="fas fa-user-circle"></i>
+            <h3>${user.username}</h3>
+            <p>Games: ${user.games_played}</p>
+        </div>
+    `).join('');
+}
+
+function showUserModal(username, isFriend) {
+    const modal = document.getElementById('userModal');
+    const modalUsername = document.getElementById('modalUsername');
+    const friendRequestBtn = document.getElementById('friendRequestBtn');
+    
+    modalUsername.textContent = username;
+    friendRequestBtn.textContent = isFriend ? 'Cancel Friend Request' : 'Send Friend Request';
+    friendRequestBtn.onclick = () => isFriend ? 
+        cancelFriendRequest(username) : sendFriendRequest(username);
+    
+    modal.style.display = 'block';
+}
+
+async function sendFriendRequest(username) {
+    await fetch(`/add_friend/${username}`, { method: 'POST' });
+    showUserModal(username, true);
+}
+
+async function cancelFriendRequest(username) {
+    await fetch(`/remove_friend/${username}`, { method: 'POST' });
+    showUserModal(username, false);
+}
+
+async function sendGreeting(username) {
+    await fetch(`/send_greeting/${username}`, { method: 'POST' });
+    alert(`Greeting sent to ${username}!`);
+}
+
+// Close modal when clicking the X or Close button
+document.querySelectorAll('.close, .close-btn').forEach(elem => {
+    elem.onclick = () => document.getElementById('userModal').style.display = 'none';
+});
+</script>
 
                 <article class="recent-activity">
                     <h2>Recent Activity</h2>
