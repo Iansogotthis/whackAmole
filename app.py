@@ -171,9 +171,12 @@ def submit_score():
         return jsonify({'error': 'Failed to submit score'}), 500
 
 @app.route("/leaderboard/<difficulty>")
-@login_required
 def get_leaderboard(difficulty):
     app.logger.info(f"Fetching leaderboard for difficulty: {difficulty}")
+    if not current_user.is_authenticated:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': 'Authentication required'}), 401
+        return redirect(url_for('login'))
     try:
         scores = HighScore.query.filter_by(difficulty=difficulty).order_by(HighScore.score.desc()).limit(10).all()
         leaderboard = []
@@ -186,7 +189,9 @@ def get_leaderboard(difficulty):
             }
             leaderboard.append(score_data)
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
-        return jsonify({'scores': leaderboard})
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'scores': leaderboard})
+        return render_template('index.html', leaderboard_scores=leaderboard, current_difficulty=difficulty)
     except Exception as e:
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
         return jsonify({'error': 'Failed to fetch leaderboard', 'scores': []}), 500
