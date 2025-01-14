@@ -1,0 +1,52 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="search-container">
+    <h2>Search Users</h2>
+    <form method="GET" action="{{ url_for('search_users') }}">
+        <input type="text" name="query" placeholder="Search by username..." value="{{ query if query }}">
+        <button type="submit">Search</button>
+    </form>
+    
+    {% if users %}
+    <div class="search-results">
+        {% for user in users %}
+        <div class="user-card">
+            <span>{{ user.username }}</span>
+            {% if user != current_user %}
+                <div class="emoji-reactions">
+                    <button onclick="sendEmoji('{{ user.id }}', '🖐️')" title="High Five">🖐️</button>
+                    <button onclick="sendEmoji('{{ user.id }}', '👊')" title="Fist Bump">👊</button>
+                    <button onclick="sendEmoji('{{ user.id }}', '😉')" title="Wink">😉</button>
+                    <button onclick="sendEmoji('{{ user.id }}', '😊')" title="Smile">😊</button>
+                    <button onclick="sendEmoji('{{ user.id }}', '😢')" title="Sad">😢</button>
+                </div>
+                {% if user not in current_user.friends_list %}
+                    <form action="{{ url_for('send_friend_request', user_id=user.id) }}" method="POST" style="display: inline;">
+                        <button type="submit">Send Friend Request</button>
+                    </form>
+                {% else %}
+                    <span>Already Friends</span>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function sendEmoji(userId, emoji) {
+    fetch('/send_emoji', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            recipient_id: userId,
+            emoji: emoji
+        })
+    });
+}
+</script>
+{% endblock %}

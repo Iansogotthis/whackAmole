@@ -70,6 +70,42 @@ button:disabled {
     cursor: not-allowed;
 }
 
+.search-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.search-results {
+    margin-top: 20px;
+}
+
+.user-card {
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.emoji-reactions button {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.emoji-reactions button:hover {
+    transform: scale(1.2);
+}owed;
+}
+
 .chat-section {
     margin-top: 20px;
     padding: 15px;

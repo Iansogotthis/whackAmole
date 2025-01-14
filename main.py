@@ -138,6 +138,40 @@ def send_message_any():
         db.session.commit()
     return redirect(url_for('chat'))
 
+@app.route("/search")
+@login_required
+def search_users():
+    query = request.args.get('query', '')
+    if query:
+        users = User.query.filter(User.username.ilike(f'%{query}%')).all()
+    else:
+        users = []
+    return render_template('search.html', users=users, query=query)
+
+@app.route("/send_friend_request/<int:user_id>", methods=['POST'])
+@login_required
+def send_friend_request(user_id):
+    user = User.query.get_or_404(user_id)
+    current_user.add_friend(user)
+    db.session.commit()
+    flash(f'Friend request sent to {user.username}!')
+    return redirect(url_for('search_users'))
+
+@app.route("/send_emoji", methods=['POST'])
+@login_required
+def send_emoji():
+    data = request.json
+    recipient = User.query.get_or_404(data['recipient_id'])
+    emoji = data['emoji']
+    message = ChatMessage(
+        sender_id=current_user.id,
+        receiver_id=recipient.id,
+        content=f"Sent {emoji}"
+    )
+    db.session.add(message)
+    db.session.commit()
+    return jsonify({"status": "success"})
+
 @app.route("/logout")
 @login_required
 def logout():
