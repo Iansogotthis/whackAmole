@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask_migrate import Migrate
 from config import Config
+from models import HighScore
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
