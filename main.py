@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app import create_app, db, User, ForumPost, HighScore, ChatMessage
 from flask_login import LoginManager
@@ -27,7 +27,12 @@ def game():
 @login_required
 def submit_score():
     try:
+        if not request.is_json:
+            return jsonify({"error": "Content type must be application/json"}), 400
         data = request.get_json()
+        if not data or 'score' not in data or 'difficulty' not in data:
+            return jsonify({"error": "Missing required fields"}), 400
+        
         score = HighScore(
             user_id=current_user.id,
             score=data['score'],
@@ -38,7 +43,7 @@ def submit_score():
         return jsonify({"success": True})
     except Exception as e:
         app.logger.error(f"Error submitting score: {str(e)}")
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/leaderboard/<difficulty>')
 @login_required
@@ -48,16 +53,14 @@ def get_leaderboard(difficulty):
             .order_by(HighScore.score.desc())\
             .limit(10)\
             .all()
-        if request.headers.get('Accept') == 'application/json':
+        if request.headers.get('Accept') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({
                 "scores": [score.to_dict() for score in scores]
             })
         return render_template('index.html', leaderboard_scores=scores, current_difficulty=difficulty)
     except Exception as e:
         app.logger.error(f"Error accessing leaderboard: {str(e)}")
-        if request.headers.get('Accept') == 'application/json':
-            return jsonify({"error": str(e)}), 400
-        return render_template('index.html', leaderboard_scores=[], current_difficulty=difficulty)
+        return jsonify({"error": str(e)}), 400
 
 @app.route("/forum")
 def forum():
