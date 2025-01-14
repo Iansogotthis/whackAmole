@@ -208,11 +208,4 @@ def register():
     return render_template('register.html')
 
 if __name__ == '__main__':
-    from gunicorn.app.wsgiapp import WSGIApplication
-
-    gunicorn_app = WSGIApplication()
-    gunicorn_app.app_uri = 'main:app'
-    gunicorn_app.cfg.set('bind', '0.0.0.0:8080')
-    gunicorn_app.cfg.set('workers', 4)
-    gunicorn_app.cfg.set('worker_class', 'sync')
-    gunicorn_app.run()
+    app.run(host='0.0.0.0', port=80, debug=False)
