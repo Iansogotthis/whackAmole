@@ -4,7 +4,6 @@ modules = ["python-3.11:v14-20231102-3f08513"]
 channel = "stable-23_05"
 
 [workflows]
-runButton = "Run Flask App"
 
 [[workflows.workflow]]
 name = "Project"
