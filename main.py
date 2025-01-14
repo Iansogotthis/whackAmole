@@ -34,13 +34,6 @@ def send_friend_request(user_id):
     return redirect(url_for('search_users'))
 
 
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-
 @app.route("/register", methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
