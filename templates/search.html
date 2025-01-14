@@ -36,6 +36,47 @@
 </div>
 
 <script>
+async function searchUsers(query) {
+    try {
+        const response = await fetch(`/search_users?query=${query}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        if (!response.ok) throw new Error('Search failed');
+        const results = await response.json();
+        displayResults(results);
+    } catch (error) {
+        console.error('Search error:', error);
+    }
+}
+
+function displayResults(results) {
+    const resultsDiv = document.querySelector('.search-results');
+    if (!results.length) {
+        resultsDiv.innerHTML = '<p>No users found</p>';
+        return;
+    }
+    resultsDiv.innerHTML = results.map(user => `
+        <div class="user-card">
+            <span>${user.username}</span>
+            <div class="emoji-reactions">
+                <button onclick="sendEmoji('${user.id}', '🖐️')">🖐️</button>
+                <button onclick="sendEmoji('${user.id}', '👊')">👊</button>
+                <button onclick="sendEmoji('${user.id}', '😉')">😉</button>
+                <button onclick="sendEmoji('${user.id}', '😊')">😊</button>
+                <button onclick="sendEmoji('${user.id}', '😢')">😢</button>
+            </div>
+            ${!user.is_friend ? 
+                `<form action="/add_friend/${user.username}" method="POST" style="display: inline;">
+                    <button type="submit">Send Friend Request</button>
+                </form>` : 
+                '<span>Already Friends</span>'
+            }
+        </div>
+    `).join('');
+}
+
 function sendEmoji(userId, emoji) {
     fetch('/send_emoji', {
         method: 'POST',

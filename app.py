@@ -363,20 +363,22 @@ def login():
 @login_required
 def search_users():
     query = request.args.get('query', '')
-    if query:
-        try:
-            users = User.query.filter(User.username.ilike(f'%{query}%')).all()
-            results = [{
-                'username': user.username,
-                'id': user.id,
-                'games_played': user.games_played,
-                'is_friend': user in current_user.friends_list
-            } for user in users if user != current_user]
-            return jsonify(results)
-        except Exception as e:
-            app.logger.error(f"Search error: {str(e)}")
-            return jsonify({'error': 'Search failed'}), 500
-    return jsonify([])
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if query:
+            try:
+                users = User.query.filter(User.username.ilike(f'%{query}%')).all()
+                results = [{
+                    'username': user.username,
+                    'id': user.id,
+                    'games_played': user.games_played,
+                    'is_friend': user in current_user.friends_list
+                } for user in users if user != current_user]
+                return jsonify(results)
+            except Exception as e:
+                app.logger.error(f"Search error: {str(e)}")
+                return jsonify({'error': 'Search failed'}), 500
+        return jsonify([])
+    return render_template('search.html')
 
 @app.route("/send_emoji", methods=['POST'])
 @login_required
