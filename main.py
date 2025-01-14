@@ -14,13 +14,6 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-@app.route('/')
-def index():
-    if not current_user.is_authenticated:
-        return redirect(url_for('login'))
-    return render_template('index.html')
-
-
 @app.route('/game')
 @login_required
 def game():
@@ -32,8 +25,7 @@ def game():
 def submit_score():
     try:
         if not request.is_json:
-            return jsonify({"error":
-                            "Content type must be application/json"}), 400
+            return jsonify({"error": "Content type must be application/json"}), 400
         data = request.get_json()
         if not data or 'score' not in data or 'difficulty' not in data:
             return jsonify({"error": "Missing required fields"}), 400
@@ -53,9 +45,9 @@ def submit_score():
 @login_required
 def get_leaderboard(difficulty):
     try:
-        scores = HighScore.query.filter_by(difficulty=difficulty)\
-            .order_by(HighScore.score.desc())\
-            .limit(10)\
+        scores = HighScore.query.filter_by(difficulty=difficulty) \
+            .order_by(HighScore.score.desc()) \
+            .limit(10) \
             .all()
         if request.headers.get(
                 'Accept') == 'application/json' or request.headers.get(
@@ -126,9 +118,9 @@ def profile(username):
         messages = ChatMessage.query.filter((
             (ChatMessage.sender_id == current_user.id)
             & (ChatMessage.receiver_id == user.id)) | (
-                (ChatMessage.sender_id == user.id)
-                & (ChatMessage.receiver_id == current_user.id))).order_by(
-                    ChatMessage.sent_at.asc()).all()
+                    (ChatMessage.sender_id == user.id)
+                    & (ChatMessage.receiver_id == current_user.id))).order_by(
+            ChatMessage.sent_at.asc()).all()
     return render_template("profile.html",
                            user=user,
                            messages=messages,
