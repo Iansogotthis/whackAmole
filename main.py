@@ -149,7 +149,7 @@ def submit_score():
     app.logger.info(f"Received score submission: {data}")
     try:
         new_score = HighScore(
-            player_name=data['player_name'],
+            user_id=current_user.id if current_user.is_authenticated else None,
             score=data['score'],
             difficulty=data['difficulty']
         )
@@ -159,6 +159,7 @@ def submit_score():
         return jsonify({'message': 'Score submitted successfully'}), 201
     except Exception as e:
         app.logger.error(f"Error submitting score: {str(e)}")
+        db.session.rollback()
         return jsonify({'error': 'Failed to submit score'}), 500
 
 @app.route("/leaderboard/<difficulty>")
@@ -166,12 +167,20 @@ def get_leaderboard(difficulty):
     app.logger.info(f"Fetching leaderboard for difficulty: {difficulty}")
     try:
         scores = HighScore.query.filter_by(difficulty=difficulty).order_by(HighScore.score.desc()).limit(10).all()
-        leaderboard = [score.to_dict() for score in scores]
+        leaderboard = []
+        for score in scores:
+            score_data = {
+                'rank': len(leaderboard) + 1,
+                'player_name': score.player.username if score.player else 'Anonymous',
+                'score': score.score,
+                'date': score.date.strftime('%Y-%m-%d %H:%M')
+            }
+            leaderboard.append(score_data)
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
-        return jsonify(leaderboard)
+        return jsonify({'scores': leaderboard})
     except Exception as e:
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
-        return jsonify({'error': 'Failed to fetch leaderboard'}), 500
+        return jsonify({'error': 'Failed to fetch leaderboard', 'scores': []}), 500
 
 @app.route("/forum")
 def forum():

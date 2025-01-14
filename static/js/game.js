@@ -456,14 +456,14 @@ function showLeaderboard(difficulty) {
                     <th>Score</th>
                     <th>Date</th>
                 </tr>
-                ${data.map((score, index) => `
+                ${data.scores ? data.scores.map((score, index) => `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${score.player_name}</td>
                         <td>${score.score}</td>
                         <td>${score.date}</td>
                     </tr>
-                `).join('')}
+                `).join('') : '<tr><td colspan="4">No scores yet</td></tr>'}
             </table>
         `;
         document.getElementById('leaderboard').innerHTML = leaderboardHTML;
