@@ -1,7 +1,7 @@
-modules = ["python-3.11:v14-20231102-3f08513"]
+modules = ["nodejs-20", "postgresql-16", "python-3.11"]
 
 [nix]
-channel = "stable-23_05"
+channel = "stable-24_05"
 
 [workflows]
 
@@ -30,7 +30,7 @@ agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python app.py --ui login register"
+args = "python main.py --ui login register"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -45,12 +45,11 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python app.py --ui login register"
+args = "python main.py --ui login register"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "python app.py"]
-deploymentTarget = "cloudrun"
+run = ["sh", "-c", "python main.py --ui login register"]
 
 [[ports]]
 localPort = 80
