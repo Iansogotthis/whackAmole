@@ -30,8 +30,10 @@ def create_app():
         try:
             db.drop_all()  # Drop existing tables
             db.create_all()  # Recreate tables with current schema
+            db.session.commit()  # Commit the changes
             app.logger.info("Database tables created successfully")
         except Exception as e:
+            db.session.rollback()
             app.logger.error(f"Error creating database tables: {str(e)}")
     
     return app
