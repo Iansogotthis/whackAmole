@@ -1,4 +1,3 @@
-
 import logging
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -22,7 +21,7 @@ login_manager.session_protection = 'strong'
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    
+
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
@@ -40,7 +39,7 @@ def create_app():
         except Exception as e:
             db.session.rollback()
             app.logger.error(f"Error creating database tables: {str(e)}")
-    
+
     return app
 
 app = create_app()
@@ -76,7 +75,7 @@ class User(UserMixin, db.Model):
     profile_bio = db.Column(db.String(500))
     total_score = db.Column(db.Integer, default=0)
     games_played = db.Column(db.Integer, default=0)
-    
+
     # Relationships
     high_scores = db.relationship('HighScore', backref='player', lazy='dynamic')
     forum_posts = db.relationship('ForumPost', backref='author_user', lazy='dynamic')
@@ -149,11 +148,13 @@ class ForumPost(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 @app.route("/")
-@login_required
 def index():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
     return render_template("index.html")
 
 @app.route("/submit_score", methods=['POST'])
+@login_required
 def submit_score():
     data = request.json
     app.logger.info(f"Received score submission: {data}")
@@ -173,6 +174,7 @@ def submit_score():
         return jsonify({'error': 'Failed to submit score'}), 500
 
 @app.route("/leaderboard/<difficulty>")
+@login_required
 def get_leaderboard(difficulty):
     app.logger.info(f"Fetching leaderboard for difficulty: {difficulty}")
     try:
@@ -261,7 +263,7 @@ def chat(friend_id=None):
         if friend not in current_user.friends_list:
             flash('You can only chat with your friends.')
             return redirect(url_for('chat'))
-        
+
         # Mark messages as read
         unread_messages = ChatMessage.query.filter_by(
             sender_id=friend.id,
@@ -271,13 +273,13 @@ def chat(friend_id=None):
         for message in unread_messages:
             message.read = True
         db.session.commit()
-        
+
         # Get chat history
         messages = ChatMessage.query.filter(
             ((ChatMessage.sender_id == current_user.id) & (ChatMessage.receiver_id == friend.id)) |
             ((ChatMessage.sender_id == friend.id) & (ChatMessage.receiver_id == current_user.id))
         ).order_by(ChatMessage.sent_at.asc()).all()
-        
+
         return render_template("chat.html", selected_friend=friend, messages=messages)
     return render_template("chat.html", selected_friend=None, messages=[])
 
@@ -289,12 +291,12 @@ def send_message(friend_id):
         if friend not in current_user.friends_list:
             flash('You can only send messages to your friends.')
             return redirect(url_for('chat'))
-        
+
         content = request.form.get('content', '').strip()
         if not content:
             flash('Message cannot be empty.')
             return redirect(url_for('chat', friend_id=friend_id))
-            
+
         message = ChatMessage(
             sender_id=current_user.id,
             receiver_id=friend_id,
@@ -306,60 +308,60 @@ def send_message(friend_id):
         db.session.rollback()
         app.logger.error(f"Error sending message: {str(e)}")
         flash('Failed to send message. Please try again.')
-    
+
     return redirect(url_for('chat', friend_id=friend_id))
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    
+
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        
+
         if User.query.filter_by(username=username).first():
             flash('Username already exists')
             return redirect(url_for('register'))
-        
+
         if User.query.filter_by(email=email).first():
             flash('Email already registered')
             return redirect(url_for('register'))
-        
+
         user = User(username=username, email=email)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        
+
         login_user(user)
         return redirect(url_for('index'))
-    
+
     return render_template('register.html')
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-    
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        
+
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for('index'))
-        
+
         flash('Invalid username or password')
-    
+
     return render_template('login.html')
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('login')) # Redirect to login after logout
 
 if __name__ == "__main__":
     if app.config['SQLALCHEMY_DATABASE_URI'] is None:
@@ -371,5 +373,5 @@ if __name__ == "__main__":
                 app.logger.info("Database tables created successfully")
         except Exception as e:
             app.logger.error(f"Error creating database tables: {str(e)}")
-    
+
     app.run(host="0.0.0.0", port=3000, debug=True)
