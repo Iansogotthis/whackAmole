@@ -11,11 +11,11 @@ const finalScore = document.getElementById('final-score');
 const gameResult = document.getElementById('game-result');
 const difficultyButtons = document.querySelectorAll('.difficulty-button');
 
-const CANVAS_WIDTH = 600;
-const CANVAS_HEIGHT = 400;
+const CANVAS_WIDTH = Math.min(600, window.innerWidth - 40);
+const CANVAS_HEIGHT = Math.min(400, window.innerHeight - 200);
 const GRID_SIZE = 3;
-const HOLE_SIZE = 100;
-const MOLE_SIZE = 80;
+const HOLE_SIZE = Math.min(100, CANVAS_WIDTH / 4);
+const MOLE_SIZE = Math.min(80, CANVAS_WIDTH / 5);
 
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
@@ -149,12 +149,26 @@ class PowerUp {
     }
 
     draw() {
-        ctx.fillStyle = this.type === 'hammer' ? 'red' : 'blue';
+        // Glowing background
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.type === 'hammer' ? 'red' : 'blue';
+        
+        // Main circle
+        ctx.fillStyle = this.type === 'hammer' ? '#ff4444' : '#4444ff';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size / 2, 0, 2 * Math.PI);
+        ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
         ctx.fill();
+        
+        // Inner circle
         ctx.fillStyle = 'white';
-        ctx.font = '20px Arial';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 0.7, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Text
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = this.type === 'hammer' ? '#ff0000' : '#0000ff';
+        ctx.font = 'bold ${Math.floor(this.size)}px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.type === 'hammer' ? 'H' : 'F', this.x, this.y);
