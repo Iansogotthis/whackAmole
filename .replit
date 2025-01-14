@@ -4,7 +4,6 @@ modules = ["nodejs-20", "postgresql-16", "python-3.11"]
 channel = "stable-24_05"
 
 [workflows]
-runButton = "Flask Server"
 
 [[workflows.workflow]]
 name = "Project"
@@ -66,7 +65,6 @@ externalPort = 80
 
 [[ports]]
 localPort = 5001
-externalPort = 3002
 
 [[ports]]
 localPort = 5002
