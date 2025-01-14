@@ -96,23 +96,7 @@
             </div>
         </div>
 
-        <div class="floating-chat-footer">
-            <form action="{{ url_for('send_message_any') }}" method="POST">
-                <input
-                    type="text"
-                    name="content"
-                    placeholder="Type your message..."
-                    required
-                />
-                <button type="button" onclick="openEmojiPicker()">
-                    <i class="fas fa-smile"></i>
-                    <!-- Emoji icon -->
-                </button>
-                <button type="submit">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </form>
-        </div>
+        
 
         <script>
             // Auto-scroll to bottom of chat messages
