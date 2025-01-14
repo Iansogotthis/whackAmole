@@ -21,10 +21,10 @@ def upgrade():
     # Add column as nullable first
     op.add_column('user', sa.Column('player_name', sa.String(length=64), nullable=True))
     
-    # Update existing records to use username as player_name
-    op.execute("UPDATE \"user\" SET player_name = username WHERE player_name IS NULL")
+    # Set player_name to username for existing records
+    op.execute('UPDATE "user" SET player_name = username')
     
-    # Then make it non-nullable
+    # Make column non-nullable
     op.alter_column('user', 'player_name',
                     existing_type=sa.String(length=64),
                     nullable=False)
