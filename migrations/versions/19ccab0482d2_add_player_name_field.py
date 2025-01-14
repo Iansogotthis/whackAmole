@@ -21,16 +21,14 @@ def upgrade():
     # Add the column as nullable first
     op.add_column('user', sa.Column('player_name', sa.String(length=64), nullable=True))
     
-    # Update existing records
-    op.execute("UPDATE \"user\" SET player_name = username WHERE player_name IS NULL")
+    # Update existing records to use username as player_name
+    op.execute("UPDATE \"user\" SET player_name = username")
     
-    # Make the column non-nullable
-    with op.batch_alter_table('user') as batch_op:
-        batch_op.alter_column('player_name',
-                           existing_type=sa.String(length=64),
-                           nullable=False)
+    # Now make the column non-nullable
+    op.alter_column('user', 'player_name',
+                    existing_type=sa.String(length=64),
+                    nullable=False)
 
 
 def downgrade():
-    with op.batch_alter_table('user') as batch_op:
-        batch_op.drop_column('player_name')
+    op.drop_column('user', 'player_name')
