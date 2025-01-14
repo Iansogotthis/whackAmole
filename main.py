@@ -12,6 +12,18 @@ def index():
 def game():
     return render_template('index.html')
 
+@app.route('/leaderboard/<difficulty>')
+def get_leaderboard(difficulty):
+    try:
+        scores = HighScore.query.filter_by(difficulty=difficulty)\
+            .order_by(HighScore.score.desc())\
+            .limit(10)\
+            .all()
+        return render_template('index.html', leaderboard_scores=scores, current_difficulty=difficulty)
+    except Exception as e:
+        app.logger.error(f"Error accessing leaderboard: {str(e)}")
+        return render_template('index.html', leaderboard_scores=[], current_difficulty=difficulty)
+
 @app.route("/forum")
 def forum():
     try:
