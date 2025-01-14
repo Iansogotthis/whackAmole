@@ -24,21 +24,6 @@ def game():
 
 
 
-@app.route("/create_post", methods=['POST'])
-@login_required
-def create_post():
-    try:
-        new_post = ForumPost(title=request.form['title'],
-                             content=request.form['content'],
-                             author_id=current_user.id)
-        db.session.add(new_post)
-        db.session.commit()
-        return redirect(url_for('forum'))
-    except Exception as e:
-        app.logger.error(f"Error creating forum post: {str(e)}")
-        return redirect(url_for('forum'))
-
-
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
