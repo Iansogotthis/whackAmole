@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app import create_app, db, User, ForumPost, HighScore, ChatMessage
@@ -215,4 +216,5 @@ if __name__ == '__main__':
             print(f"Database initialization error: {e}")
             db.session.rollback()
 
-    app.run(host='0.0.0.0', port=3000, debug=False)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=False)
