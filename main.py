@@ -2,18 +2,28 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import create_app, db, User, ForumPost, HighScore
+from flask_login import LoginManager
 
 app = create_app()
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/game')
+@login_required
 def game():
     return render_template('index.html')
 
 @app.route('/leaderboard/<difficulty>')
+@login_required
 def get_leaderboard(difficulty):
     try:
         scores = HighScore.query.filter_by(difficulty=difficulty)\
