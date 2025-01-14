@@ -72,6 +72,8 @@ class User(UserMixin, db.Model):
     profile_bio = db.Column(db.String(500))
     total_score = db.Column(db.Integer, default=0)
     games_played = db.Column(db.Integer, default=0)
+    player_name = db.Column(db.String(64), nullable=False) # Added player_name field
+
 
     # Relationships
     high_scores = db.relationship('HighScore', backref='player', lazy='dynamic')
@@ -86,6 +88,7 @@ class User(UserMixin, db.Model):
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
+        self.player_name = self.username #Added to set player_name on password set
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -366,7 +369,7 @@ def search_users():
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         if query:
             try:
-                users = User.query.filter(User.username.ilike(f'%{query}%')).all()
+                users = User.query.filter(User.player_name.ilike(f'%{query}%')).all()
                 results = [{
                     'username': user.username,
                     'id': user.id,
