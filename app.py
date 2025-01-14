@@ -29,7 +29,9 @@ def create_app():
     # Initialize database tables
     with app.app_context():
         try:
-            db.drop_all()  # Drop existing tables
+            db.session.execute('DROP SCHEMA public CASCADE')
+            db.session.execute('CREATE SCHEMA public')
+            db.session.commit()
             db.create_all()  # Recreate tables with current schema
             db.session.commit()  # Commit the changes
             migrate.init_app(app, db)  # Initialize migrations
