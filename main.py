@@ -23,6 +23,23 @@ def index():
 def game():
     return render_template('index.html')
 
+@app.route('/submit_score', methods=['POST'])
+@login_required
+def submit_score():
+    try:
+        data = request.get_json()
+        score = HighScore(
+            user_id=current_user.id,
+            score=data['score'],
+            difficulty=data['difficulty']
+        )
+        db.session.add(score)
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        app.logger.error(f"Error submitting score: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+
 @app.route('/leaderboard/<difficulty>')
 @login_required
 def get_leaderboard(difficulty):
@@ -31,9 +48,15 @@ def get_leaderboard(difficulty):
             .order_by(HighScore.score.desc())\
             .limit(10)\
             .all()
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({
+                "scores": [score.to_dict() for score in scores]
+            })
         return render_template('index.html', leaderboard_scores=scores, current_difficulty=difficulty)
     except Exception as e:
         app.logger.error(f"Error accessing leaderboard: {str(e)}")
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({"error": str(e)}), 400
         return render_template('index.html', leaderboard_scores=[], current_difficulty=difficulty)
 
 @app.route("/forum")
