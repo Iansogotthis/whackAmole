@@ -53,26 +53,36 @@ function loadAudio(src) {
     return new Promise((resolve, reject) => {
         const audio = new Audio(src);
         audio.oncanplaythrough = () => resolve(audio);
-        audio.onerror = reject;
+        audio.onerror = (e) => {
+            console.error(`Failed to load audio: ${src}`, e);
+            reject(new Error(`Failed to load ${src}`));
+        };
     });
 }
 
 let whackSound, moleAppearSound, gameOverSound, winSound;
 
-Promise.all([
-    loadAudio('/static/assets/whack.mp3'),
-    loadAudio('/static/assets/mole_appear.mp3'),
-    loadAudio('/static/assets/game_over.mp3'),
-    loadAudio('/static/assets/win.mp3')
-]).then(([whack, moleAppear, gameOver, win]) => {
+const audioFiles = [
+    { name: 'whack', path: '/static/assets/whack.mp3' },
+    { name: 'moleAppear', path: '/static/assets/mole_appear.mp3' },
+    { name: 'gameOver', path: '/static/assets/game_over.mp3' },
+    { name: 'win', path: '/static/assets/win.mp3' }
+];
+
+Promise.all(
+    audioFiles.map(file => 
+        loadAudio(file.path)
+            .catch(err => {
+                console.error(`Error loading ${file.name}:`, err);
+                return { play: () => {} };
+            })
+    )
+).then(([whack, moleAppear, gameOver, win]) => {
     whackSound = whack;
     moleAppearSound = moleAppear;
     gameOverSound = gameOver;
     winSound = win;
-    console.log('All audio files loaded successfully');
-}).catch(error => {
-    console.error('Error loading audio files:', error);
-    whackSound = moleAppearSound = gameOverSound = winSound = { play: () => {} };
+    console.log('Audio loading complete');
 });
 
 function updateScore(points) {
