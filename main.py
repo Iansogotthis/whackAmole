@@ -31,6 +31,7 @@ def create_app():
             db.drop_all()  # Drop existing tables
             db.create_all()  # Recreate tables with current schema
             db.session.commit()  # Commit the changes
+            migrate.init_app(app, db)  # Initialize migrations
             app.logger.info("Database tables created successfully")
         except Exception as e:
             db.session.rollback()
