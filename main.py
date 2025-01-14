@@ -92,14 +92,43 @@ def register():
         return redirect(url_for('index'))
 
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
+        username = request.form['username'].strip()
+        email = request.form['email'].strip()
         password = request.form['password']
 
+        # Username validation
+        if len(username) < 3:
+            flash('Username must be at least 3 characters long')
+            return redirect(url_for('register'))
+        
+        if len(username) > 20:
+            flash('Username must be less than 20 characters')
+            return redirect(url_for('register'))
+            
+        if not username.isalnum():
+            flash('Username must contain only letters and numbers')
+            return redirect(url_for('register'))
+
+        # Password validation
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long')
+            return redirect(url_for('register'))
+
+        if len(password) > 50:
+            flash('Password is too long')
+            return redirect(url_for('register'))
+
+        # Email validation 
+        if not '@' in email or not '.' in email:
+            flash('Please enter a valid email address')
+            return redirect(url_for('register'))
+
+        # Check if username exists
         if User.query.filter_by(username=username).first():
             flash('Username already exists')
             return redirect(url_for('register'))
 
+        # Check if email exists
         if User.query.filter_by(email=email).first():
             flash('Email already registered')
             return redirect(url_for('register'))
