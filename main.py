@@ -40,6 +40,23 @@ def forum():
     try:
         posts = ForumPost.query.order_by(ForumPost.created_at.desc()).all()
         top_scores = HighScore.query.order_by(HighScore.score.desc()).limit(5).all()
+
+@app.route("/create_post", methods=['POST'])
+@login_required
+def create_post():
+    try:
+        new_post = ForumPost(
+            title=request.form['title'],
+            content=request.form['content'],
+            author_id=current_user.id
+        )
+        db.session.add(new_post)
+        db.session.commit()
+        return redirect(url_for('forum'))
+    except Exception as e:
+        app.logger.error(f"Error creating forum post: {str(e)}")
+        return redirect(url_for('forum'))
+
         return render_template("forum.html", posts=posts, top_scores=top_scores)
     except Exception as e:
         app.logger.error(f"Error accessing forum: {str(e)}")
