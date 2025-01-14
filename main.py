@@ -26,7 +26,8 @@ def create_app():
     # Initialize database tables
     with app.app_context():
         try:
-            db.create_all()
+            db.drop_all()  # Drop existing tables
+            db.create_all()  # Recreate tables with current schema
             app.logger.info("Database tables created successfully")
         except Exception as e:
             app.logger.error(f"Error creating database tables: {str(e)}")
