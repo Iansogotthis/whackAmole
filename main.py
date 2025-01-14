@@ -24,25 +24,6 @@ def game():
 
 
 
-@app.route("/login", methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-
-        if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('index'))
-
-        flash('Invalid username or password')
-
-    return render_template('login.html')
-
-
 @app.route("/profile/<username>")
 @login_required
 def profile(username):
