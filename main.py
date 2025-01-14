@@ -24,27 +24,6 @@ def game():
 
 
 
-@app.route("/chat")
-@login_required
-def chat():
-    return render_template("chat.html", selected_friend=None, messages=[])
-
-
-@app.route("/send_message_any", methods=['POST'])
-@login_required
-def send_message_any():
-    content = request.form.get('content')
-    if content:
-        message = ChatMessage(
-            sender_id=current_user.id,
-            receiver_id=current_user.
-            id,  # Placeholder - you may want to specify a receiver
-            content=content)
-        db.session.add(message)
-        db.session.commit()
-    return redirect(url_for('chat'))
-
-
 @app.route("/search_users")
 @login_required
 def search_users():
