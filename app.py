@@ -190,7 +190,7 @@ def get_leaderboard(difficulty):
         app.logger.info(f"Leaderboard fetched successfully: {leaderboard}")
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({'scores': leaderboard})
-        return render_template('index.html', leaderboard_scores=leaderboard, current_difficulty=difficulty)
+        return render_template('leaderboard.html', leaderboard_scores=leaderboard, current_difficulty=difficulty)
     except Exception as e:
         app.logger.error(f"Error fetching leaderboard: {str(e)}")
         return jsonify({'error': 'Failed to fetch leaderboard', 'scores': []}), 500
