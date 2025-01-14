@@ -359,6 +359,35 @@ def login():
 
     return render_template('login.html')
 
+@app.route("/search_users")
+@login_required
+def search_users():
+    query = request.args.get('query', '')
+    if query:
+        users = User.query.filter(User.username.ilike(f'%{query}%')).all()
+        results = [{
+            'username': user.username,
+            'id': user.id,
+            'is_friend': user in current_user.friends_list
+        } for user in users if user != current_user]
+        return jsonify(results)
+    return jsonify([])
+
+@app.route("/send_emoji", methods=['POST'])
+@login_required
+def send_emoji():
+    data = request.json
+    recipient = User.query.get_or_404(data['recipient_id'])
+    emoji = data['emoji']
+    message = ChatMessage(
+        sender_id=current_user.id,
+        receiver_id=recipient.id,
+        content=f"Sent {emoji}"
+    )
+    db.session.add(message)
+    db.session.commit()
+    return jsonify({"status": "success"})
+
 @app.route("/logout")
 @login_required
 def logout():

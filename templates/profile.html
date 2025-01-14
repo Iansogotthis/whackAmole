@@ -135,12 +135,102 @@
         <span class="close">&times;</span>
         <h2 id="modalUsername"></h2>
         <div id="modalActions">
-            <button id="friendRequestBtn"></button>
-            <button onclick="sendGreeting(modalUsername.textContent)">Send Greeting</button>
-            <button class="close-btn">Close</button>
+            <button id="friendRequestBtn" class="action-btn"></button>
+            <button onclick="showEmojiModal()" class="action-btn">Send Greeting</button>
+            <button class="close-btn">Back</button>
         </div>
     </div>
 </div>
+
+<!-- Emoji Modal -->
+<div id="emojiModal" class="modal">
+    <div class="modal-content">
+        <h3>Send a Greeting</h3>
+        <div class="emoji-grid">
+            <button onclick="sendEmoji('🖐️')" class="emoji-btn">🖐️ High Five</button>
+            <button onclick="sendEmoji('👊')" class="emoji-btn">👊 Fist Bump</button>
+            <button onclick="sendEmoji('😉')" class="emoji-btn">😉 Wink</button>
+            <button onclick="sendEmoji('😊')" class="emoji-btn">😊 Smile</button>
+            <button onclick="sendEmoji('😢')" class="emoji-btn">😢 Sad</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedUserId = null;
+
+async function searchUsers() {
+    const query = document.getElementById('userSearch').value;
+    const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
+    const users = await response.json();
+    displaySearchResults(users);
+}
+
+function displaySearchResults(users) {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = users.map(user => `
+        <div class="friend-card" onclick="showUserModal('${user.username}', ${user.is_friend}, ${user.id})">
+            <i class="fas fa-user-circle"></i>
+            <h3>${user.username}</h3>
+        </div>
+    `).join('');
+}
+
+function showUserModal(username, isFriend, userId) {
+    const modal = document.getElementById('userModal');
+    const modalUsername = document.getElementById('modalUsername');
+    const friendRequestBtn = document.getElementById('friendRequestBtn');
+    
+    selectedUserId = userId;
+    modalUsername.textContent = username;
+    friendRequestBtn.textContent = isFriend ? 'Cancel Friend Request' : 'Send Friend Request';
+    friendRequestBtn.onclick = () => isFriend ? 
+        cancelFriendRequest(username) : sendFriendRequest(username);
+    
+    modal.style.display = 'block';
+}
+
+function showEmojiModal() {
+    document.getElementById('userModal').style.display = 'none';
+    document.getElementById('emojiModal').style.display = 'block';
+}
+
+async function sendEmoji(emoji) {
+    if (selectedUserId) {
+        await fetch('/send_emoji', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                recipient_id: selectedUserId,
+                emoji: emoji
+            })
+        });
+        document.getElementById('emojiModal').style.display = 'none';
+        alert('Greeting sent!');
+    }
+}
+
+async function sendFriendRequest(username) {
+    await fetch(`/add_friend/${username}`, { method: 'POST' });
+    document.getElementById('userModal').style.display = 'none';
+    alert('Friend request sent!');
+}
+
+async function cancelFriendRequest(username) {
+    await fetch(`/remove_friend/${username}`, { method: 'POST' });
+    document.getElementById('userModal').style.display = 'none';
+    alert('Friend request cancelled!');
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+}
+</script>
 
 <script>
 async function searchUsers() {
