@@ -18,10 +18,10 @@
 <script>
       document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('message', function(event) {
-          if (event.data === 'auth_complete') {
+          if (event.origin === 'https://replit.com' && event.data === 'auth_complete') {
             window.location.reload();
           }
         });
       });
     </script>
-    <script src="https://replit.com/public/js/repl-auth-v2.js"></script>
+    <script src="https://replit.com/public/js/repl-auth-v2.js" crossorigin="anonymous"></script>
