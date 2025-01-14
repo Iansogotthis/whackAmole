@@ -2,41 +2,112 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="search-container">
-    <h2>Search Users</h2>
-    <form method="GET" action="{{ url_for('search_users') }}">
-        <input type="text" name="query" placeholder="Search by username..." value="{{ query if query }}">
-        <button type="submit">Search</button>
-    </form>
-    
-    {% if users %}
-    <div class="search-results">
-        {% for user in users %}
-        <div class="user-card">
-            <span>{{ user.username }}</span>
-            {% if user != current_user %}
-                <div class="emoji-reactions">
-                    <button onclick="sendEmoji('{{ user.id }}', '🖐️')" title="High Five">🖐️</button>
-                    <button onclick="sendEmoji('{{ user.id }}', '👊')" title="Fist Bump">👊</button>
-                    <button onclick="sendEmoji('{{ user.id }}', '😉')" title="Wink">😉</button>
-                    <button onclick="sendEmoji('{{ user.id }}', '😊')" title="Smile">😊</button>
-                    <button onclick="sendEmoji('{{ user.id }}', '😢')" title="Sad">😢</button>
-                </div>
-                {% if user not in current_user.friends_list %}
-                    <form action="{{ url_for('send_friend_request', user_id=user.id) }}" method="POST" style="display: inline;">
-                        <button type="submit">Send Friend Request</button>
-                    </form>
-                {% else %}
-                    <span>Already Friends</span>
-                {% endif %}
-            {% endif %}
-        </div>
-        {% endfor %}
+    <div class="search-box">
+        <input type="text" id="search-input" placeholder="Search users..." onkeyup="searchUsers(this.value)">
+        <button onclick="searchUsers(document.getElementById('search-input').value)">
+            <i class="fas fa-search"></i>
+        </button>
     </div>
-    {% endif %}
+    
+    <div class="search-results"></div>
+
+    <div id="user-actions-modal" class="modal">
+        <div class="modal-content">
+            <h3>User Actions</h3>
+            <div class="action-buttons">
+                <button onclick="showFriendRequest()">Send Friend Request</button>
+                <button onclick="showEmojiPopup()">Send Greeting</button>
+                <button onclick="closeModal()">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="emoji-popup" class="emoji-popup">
+        <h3>Send Greeting</h3>
+        <div class="emoji-grid">
+            <button onclick="sendEmoji('🖐️')">🖐️</button>
+            <button onclick="sendEmoji('👊')">👊</button>
+            <button onclick="sendEmoji('😉')">😉</button>
+            <button onclick="sendEmoji('😊')">😊</button>
+            <button onclick="sendEmoji('😢')">😢</button>
+        </div>
+        <button onclick="closeEmojiPopup()" class="close-btn">Close</button>
+    </div>
 </div>
 
+<style>
+.search-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.search-box button {
+    padding: 10px 20px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal, .emoji-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.emoji-grid button {
+    font-size: 24px;
+    padding: 10px;
+    border: none;
+    background: #f0f0f0;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.user-card {
+    background: white;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+</style>
+
 <script>
+let selectedUserId = null;
+
 async function searchUsers(query) {
+    if (query.length < 2) return;
     try {
         const response = await fetch(`/search_users?query=${query}`, {
             headers: {
@@ -53,41 +124,73 @@ async function searchUsers(query) {
 
 function displayResults(results) {
     const resultsDiv = document.querySelector('.search-results');
-    if (!results.length) {
-        resultsDiv.innerHTML = '<p>No users found</p>';
-        return;
-    }
     resultsDiv.innerHTML = results.map(user => `
-        <div class="user-card">
+        <div class="user-card" onclick="showUserActions('${user.id}', '${user.username}')">
             <span>${user.username}</span>
-            <div class="emoji-reactions">
-                <button onclick="sendEmoji('${user.id}', '🖐️')">🖐️</button>
-                <button onclick="sendEmoji('${user.id}', '👊')">👊</button>
-                <button onclick="sendEmoji('${user.id}', '😉')">😉</button>
-                <button onclick="sendEmoji('${user.id}', '😊')">😊</button>
-                <button onclick="sendEmoji('${user.id}', '😢')">😢</button>
-            </div>
-            ${!user.is_friend ? 
-                `<form action="/add_friend/${user.username}" method="POST" style="display: inline;">
-                    <button type="submit">Send Friend Request</button>
-                </form>` : 
-                '<span>Already Friends</span>'
-            }
         </div>
     `).join('');
 }
 
-function sendEmoji(userId, emoji) {
-    fetch('/send_emoji', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            recipient_id: userId,
-            emoji: emoji
-        })
-    });
+function showUserActions(userId, username) {
+    selectedUserId = userId;
+    document.getElementById('user-actions-modal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('user-actions-modal').style.display = 'none';
+    selectedUserId = null;
+}
+
+function showEmojiPopup() {
+    document.getElementById('emoji-popup').style.display = 'block';
+    document.getElementById('user-actions-modal').style.display = 'none';
+}
+
+function closeEmojiPopup() {
+    document.getElementById('emoji-popup').style.display = 'none';
+    document.getElementById('user-actions-modal').style.display = 'block';
+}
+
+async function sendFriendRequest() {
+    if (!selectedUserId) return;
+    try {
+        const response = await fetch(`/send_friend_request/${selectedUserId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        if (response.ok) {
+            alert('Friend request sent!');
+            closeModal();
+        }
+    } catch (error) {
+        console.error('Error sending friend request:', error);
+    }
+}
+
+async function sendEmoji(emoji) {
+    if (!selectedUserId) return;
+    try {
+        const response = await fetch('/send_emoji', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                recipient_id: selectedUserId,
+                emoji: emoji
+            })
+        });
+        if (response.ok) {
+            alert('Greeting sent!');
+            closeEmojiPopup();
+            closeModal();
+        }
+    } catch (error) {
+        console.error('Error sending emoji:', error);
+    }
 }
 </script>
 {% endblock %}
