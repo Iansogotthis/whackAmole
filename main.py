@@ -263,13 +263,17 @@ def chat(friend_id=None):
 @app.route("/send_message/<int:friend_id>", methods=['POST'])
 @login_required
 def send_message(friend_id):
-    friend = User.query.get_or_404(friend_id)
-    if friend not in current_user.friends_list:
-        flash('You can only send messages to your friends.')
-        return redirect(url_for('chat'))
-    
-    content = request.form.get('content')
-    if content:
+    try:
+        friend = User.query.get_or_404(friend_id)
+        if friend not in current_user.friends_list:
+            flash('You can only send messages to your friends.')
+            return redirect(url_for('chat'))
+        
+        content = request.form.get('content', '').strip()
+        if not content:
+            flash('Message cannot be empty.')
+            return redirect(url_for('chat', friend_id=friend_id))
+            
         message = ChatMessage(
             sender_id=current_user.id,
             receiver_id=friend_id,
@@ -277,6 +281,10 @@ def send_message(friend_id):
         )
         db.session.add(message)
         db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error sending message: {str(e)}")
+        flash('Failed to send message. Please try again.')
     
     return redirect(url_for('chat', friend_id=friend_id))
 
