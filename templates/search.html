@@ -3,7 +3,7 @@
 {% block content %}
 <div class="search-container">
     <div class="search-box">
-        <input type="text" id="search-input" placeholder="Search players..." oninput="searchUsers(this.value)">
+        <input type="text" id="search-input" placeholder="Search users..." onkeyup="searchUsers(this.value)">
         <button onclick="searchUsers(document.getElementById('search-input').value)">
             <i class="fas fa-search"></i>
         </button>
@@ -100,43 +100,6 @@
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.user-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.player-name {
-    font-size: 1.1em;
-    font-weight: bold;
-}
-
-.username {
-    color: #666;
-    font-size: 0.9em;
-}
-
-.games {
-    font-size: 0.8em;
-    color: #888;
-}
-
-.no-results, .error {
-    text-align: center;
-    padding: 20px;
-    color: #666;
-}
-
-.error {
-    color: #ff4444;
 }
 </style>
 
@@ -144,34 +107,28 @@
 let selectedUserId = null;
 
 async function searchUsers(query) {
-    const resultsDiv = document.querySelector('.search-results');
-    if (query.length < 1) {
-        resultsDiv.innerHTML = '';
-        return;
-    }
-    
+    if (query.length < 2) return;
     try {
-        const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`, {
+        const response = await fetch(`/search_users?query=${query}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
         if (!response.ok) throw new Error('Search failed');
         const results = await response.json();
-        
-        resultsDiv.innerHTML = results.map(user => `
-            <div class="user-card" onclick="showUserActions('${user.id}', '${user.username}')">
-                <div class="user-info">
-                    <span class="player-name">${user.player_name}</span>
-                    <span class="username">@${user.username}</span>
-                    <span class="games">Games played: ${user.games_played}</span>
-                </div>
-            </div>
-        `).join('') || '<div class="no-results">No players found</div>';
+        displayResults(results);
     } catch (error) {
         console.error('Search error:', error);
-        resultsDiv.innerHTML = '<div class="error">Search failed. Please try again.</div>';
     }
+}
+
+function displayResults(results) {
+    const resultsDiv = document.querySelector('.search-results');
+    resultsDiv.innerHTML = results.map(user => `
+        <div class="user-card" onclick="showUserActions('${user.id}', '${user.username}')">
+            <span>${user.username}</span>
+        </div>
+    `).join('');
 }
 
 function showUserActions(userId, username) {
