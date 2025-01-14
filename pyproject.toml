@@ -2,7 +2,7 @@
 name = "repl-nix-whackamolefixer"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Ian Mount mount88ian@gmail.com"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
