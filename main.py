@@ -14,6 +14,8 @@ db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
 
 def create_app():
     app = Flask(__name__)
@@ -140,6 +142,7 @@ class ForumPost(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 @app.route("/")
+@login_required
 def index():
     return render_template("index.html")
 
