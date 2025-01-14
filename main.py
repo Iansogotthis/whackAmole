@@ -84,7 +84,19 @@ def login():
 @login_required
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template("profile.html", user=user)
+    messages = []
+    if user != current_user:
+        messages = ChatMessage.query.filter(
+            ((ChatMessage.sender_id == current_user.id) & (ChatMessage.receiver_id == user.id)) |
+            ((ChatMessage.sender_id == user.id) & (ChatMessage.receiver_id == current_user.id))
+        ).order_by(ChatMessage.sent_at.asc()).all()
+    return render_template("profile.html", user=user, messages=messages)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
