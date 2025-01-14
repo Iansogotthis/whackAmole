@@ -9,9 +9,11 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
 
 @app.route('/')
 def index():
@@ -19,32 +21,34 @@ def index():
         return redirect(url_for('login'))
     return render_template('index.html')
 
+
 @app.route('/game')
 @login_required
 def game():
     return render_template('index.html')
+
 
 @app.route('/submit_score', methods=['POST'])
 @login_required
 def submit_score():
     try:
         if not request.is_json:
-            return jsonify({"error": "Content type must be application/json"}), 400
+            return jsonify({"error":
+                            "Content type must be application/json"}), 400
         data = request.get_json()
         if not data or 'score' not in data or 'difficulty' not in data:
             return jsonify({"error": "Missing required fields"}), 400
 
-        score = HighScore(
-            user_id=current_user.id,
-            score=data['score'],
-            difficulty=data['difficulty']
-        )
+        score = HighScore(user_id=current_user.id,
+                          score=data['score'],
+                          difficulty=data['difficulty'])
         db.session.add(score)
         db.session.commit()
         return jsonify({"success": True})
     except Exception as e:
         app.logger.error(f"Error submitting score: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/leaderboard/<difficulty>')
 @login_required
@@ -54,40 +58,46 @@ def get_leaderboard(difficulty):
             .order_by(HighScore.score.desc())\
             .limit(10)\
             .all()
-        if request.headers.get('Accept') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({
-                "scores": [score.to_dict() for score in scores]
-            })
-        return render_template('leaderboard.html', leaderboard_scores=scores, current_difficulty=difficulty)
+        if request.headers.get(
+                'Accept') == 'application/json' or request.headers.get(
+                    'X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"scores": [score.to_dict() for score in scores]})
+        return render_template('leaderboard.html',
+                               leaderboard_scores=scores,
+                               current_difficulty=difficulty)
     except Exception as e:
         app.logger.error(f"Error accessing leaderboard: {str(e)}")
         return jsonify({"error": str(e)}), 400
+
 
 @app.route("/forum")
 def forum():
     try:
         posts = ForumPost.query.order_by(ForumPost.created_at.desc()).all()
-        top_scores = HighScore.query.order_by(HighScore.score.desc()).limit(5).all()
-        return render_template("forum.html", posts=posts, top_scores=top_scores)
+        top_scores = HighScore.query.order_by(
+            HighScore.score.desc()).limit(5).all()
+        return render_template("forum.html",
+                               posts=posts,
+                               top_scores=top_scores)
     except Exception as e:
         app.logger.error(f"Error accessing forum: {str(e)}")
         return render_template("forum.html", posts=[], top_scores=[])
+
 
 @app.route("/create_post", methods=['POST'])
 @login_required
 def create_post():
     try:
-        new_post = ForumPost(
-            title=request.form['title'],
-            content=request.form['content'],
-            author_id=current_user.id
-        )
+        new_post = ForumPost(title=request.form['title'],
+                             content=request.form['content'],
+                             author_id=current_user.id)
         db.session.add(new_post)
         db.session.commit()
         return redirect(url_for('forum'))
     except Exception as e:
         app.logger.error(f"Error creating forum post: {str(e)}")
         return redirect(url_for('forum'))
+
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -107,22 +117,30 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route("/profile/<username>")
 @login_required
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
     messages = []
     if user != current_user:
-        messages = ChatMessage.query.filter(
-            ((ChatMessage.sender_id == current_user.id) & (ChatMessage.receiver_id == user.id)) |
-            ((ChatMessage.sender_id == user.id) & (ChatMessage.receiver_id == current_user.id))
-        ).order_by(ChatMessage.sent_at.asc()).all()
-    return render_template("profile.html", user=user, messages=messages, HighScore=HighScore)
+        messages = ChatMessage.query.filter((
+            (ChatMessage.sender_id == current_user.id)
+            & (ChatMessage.receiver_id == user.id)) | (
+                (ChatMessage.sender_id == user.id)
+                & (ChatMessage.receiver_id == current_user.id))).order_by(
+                    ChatMessage.sent_at.asc()).all()
+    return render_template("profile.html",
+                           user=user,
+                           messages=messages,
+                           HighScore=HighScore)
+
 
 @app.route("/chat")
 @login_required
 def chat():
     return render_template("chat.html", selected_friend=None, messages=[])
+
 
 @app.route("/send_message_any", methods=['POST'])
 @login_required
@@ -131,12 +149,13 @@ def send_message_any():
     if content:
         message = ChatMessage(
             sender_id=current_user.id,
-            receiver_id=current_user.id,  # Placeholder - you may want to specify a receiver
-            content=content
-        )
+            receiver_id=current_user.
+            id,  # Placeholder - you may want to specify a receiver
+            content=content)
         db.session.add(message)
         db.session.commit()
     return redirect(url_for('chat'))
+
 
 @app.route("/search")
 @login_required
@@ -148,6 +167,7 @@ def search_users():
         users = []
     return render_template('search.html', users=users, query=query)
 
+
 @app.route("/send_friend_request/<int:user_id>", methods=['POST'])
 @login_required
 def send_friend_request(user_id):
@@ -157,26 +177,27 @@ def send_friend_request(user_id):
     flash(f'Friend request sent to {user.username}!')
     return redirect(url_for('search_users'))
 
+
 @app.route("/send_emoji", methods=['POST'])
 @login_required
 def send_emoji():
     data = request.json
     recipient = User.query.get_or_404(data['recipient_id'])
     emoji = data['emoji']
-    message = ChatMessage(
-        sender_id=current_user.id,
-        receiver_id=recipient.id,
-        content=f"Sent {emoji}"
-    )
+    message = ChatMessage(sender_id=current_user.id,
+                          receiver_id=recipient.id,
+                          content=f"Sent {emoji}")
     db.session.add(message)
     db.session.commit()
     return jsonify({"status": "success"})
+
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -211,7 +232,7 @@ def register():
                 flash('Password is too long')
                 return redirect(url_for('register'))
 
-            # Email validation 
+            # Email validation
             if not '@' in email or not '.' in email:
                 flash('Please enter a valid email address')
                 return redirect(url_for('register'))
@@ -240,6 +261,7 @@ def register():
             return redirect(url_for('register'))
 
     return render_template('register.html')
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
