@@ -14,3 +14,13 @@
         {% endif %}
     </div>
 </div>
+<script>
+      window.addEventListener('load', function() {
+        window.addEventListener('message', function(e) {
+          if (e.data === 'auth_complete') {
+            window.location.reload();
+          }
+        });
+      });
+    </script>
+    <script src="https://auth.util.repl.co/script.js"></script>
