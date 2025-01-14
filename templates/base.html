@@ -16,9 +16,9 @@
     </div>
 </div>
 <script>
-      window.addEventListener('load', function() {
-        window.addEventListener('message', function(e) {
-          if (e.data === 'auth_complete') {
+      document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('message', function(event) {
+          if (event.data === 'auth_complete') {
             window.location.reload();
           }
         });
