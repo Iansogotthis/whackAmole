@@ -34,20 +34,6 @@ def send_friend_request(user_id):
     return redirect(url_for('search_users'))
 
 
-@app.route("/send_emoji", methods=['POST'])
-@login_required
-def send_emoji():
-    data = request.json
-    recipient = User.query.get_or_404(data['recipient_id'])
-    emoji = data['emoji']
-    message = ChatMessage(sender_id=current_user.id,
-                          receiver_id=recipient.id,
-                          content=f"Sent {emoji}")
-    db.session.add(message)
-    db.session.commit()
-    return jsonify({"status": "success"})
-
-
 @app.route("/logout")
 @login_required
 def logout():
