@@ -24,21 +24,6 @@ def game():
 
 
 
-@app.route("/search_users")
-@login_required
-def search_users():
-    query = request.args.get('query', '')
-    if query:
-        users = User.query.filter(User.username.ilike(f'%{query}%')).all()
-        results = [{
-            'username': user.username,
-            'id': user.id,
-            'is_friend': user in current_user.friends_list
-        } for user in users if user != current_user]
-        return jsonify(results)
-    return jsonify([])
-
-
 @app.route("/send_friend_request/<int:user_id>", methods=['POST'])
 @login_required
 def send_friend_request(user_id):
