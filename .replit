@@ -4,11 +4,15 @@ modules = ["nodejs-20", "postgresql-16", "python-3.11"]
 channel = "stable-24_05"
 
 [workflows]
+runButton = "Run Flask App"
 
 [[workflows.workflow]]
 name = "Project"
 mode = "parallel"
 author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
@@ -27,7 +31,7 @@ agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python main.py"
+args = "python main.py --ui login register"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -42,11 +46,11 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python main.py"
+args = "python main.py --ui login register"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "python main.py"]
+run = ["sh", "-c", "python main.py --ui login register"]
 
 [[ports]]
 localPort = 80
