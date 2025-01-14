@@ -12,6 +12,16 @@ def index():
 def game():
     return render_template('index.html')
 
+@app.route("/forum")
+def forum():
+    try:
+        posts = ForumPost.query.order_by(ForumPost.created_at.desc()).all()
+        top_scores = HighScore.query.order_by(HighScore.score.desc()).limit(5).all()
+        return render_template("forum.html", posts=posts, top_scores=top_scores)
+    except Exception as e:
+        app.logger.error(f"Error accessing forum: {str(e)}")
+        return render_template("forum.html", posts=[], top_scores=[])
+
 if __name__ == '__main__':
     with app.app_context():
         try:
