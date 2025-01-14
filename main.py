@@ -208,12 +208,11 @@ def register():
     return render_template('register.html')
 
 if __name__ == '__main__':
-    with app.app_context():
-        try:
-            db.create_all()
-            db.session.commit()
-        except Exception as e:
-            print(f"Database initialization error: {e}")
-            db.session.rollback()
+    from gunicorn.app.wsgiapp import WSGIApplication
 
-    app.run(host='0.0.0.0', port=80, debug=False)
+    gunicorn_app = WSGIApplication()
+    gunicorn_app.app_uri = 'main:app'
+    gunicorn_app.cfg.set('bind', '0.0.0.0:8080')
+    gunicorn_app.cfg.set('workers', 4)
+    gunicorn_app.cfg.set('worker_class', 'sync')
+    gunicorn_app.run()
