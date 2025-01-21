@@ -43,9 +43,8 @@
                             <span class="friend-name"
                                 >{{ friend.username }}</span
                             >
-                            {% set unread =
-                            friend.sent_messages.filter_by(receiver_id=current_user.id,
-                            read=False).count() %} {% if unread > 0 %}
+                            {% set unread = friend.sent_messages|selectattr('receiver_id', 'equalto', current_user.id)|selectattr('read', 'equalto', false)|list|length %}
+                            {% if unread > 0 %}
                             <span class="unread-badge">{{ unread }}</span>
                             {% endif %}
                         </a>
