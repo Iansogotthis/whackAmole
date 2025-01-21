@@ -454,6 +454,10 @@ h1, h2 {
 }
 
 /* Adjust body padding to account for fixed navbar */
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     padding-top: 70px;
 }

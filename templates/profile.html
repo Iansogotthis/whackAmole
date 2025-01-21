@@ -392,7 +392,10 @@ document.querySelectorAll('.close, .close-btn').forEach(elem => {
             document.addEventListener("DOMContentLoaded", function () {
                 const chatMessages = document.getElementById("chat-messages");
                 if (chatMessages) {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    chatMessages.scrollTo({
+                        top: chatMessages.scrollHeight,
+                        behavior: 'smooth'
+                    });
                 }
             });
         </script>
