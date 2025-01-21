@@ -1,9 +1,12 @@
 <div class="nav-container">
     <div class="nav-logo">
-        <a href="{{ url_for('index') }}">
-            <div class="crosshair">
+        <a href="{{ url_for('index') }}" class="logo-link">
+            <div class="crosshair-container">
                 <img src="{{ url_for('static', filename='assets/mole.svg') }}" alt="Whack-a-Mole" class="logo-mole">
+                <div class="crosshair-horizontal"></div>
+                <div class="crosshair-vertical"></div>
             </div>
+            <span class="logo-text">Whack-a-Mole</span>
         </a>
     </div>
     <div class="nav-toggle">Menu</div>
