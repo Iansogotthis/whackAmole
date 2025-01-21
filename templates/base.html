@@ -1,4 +1,9 @@
 <div class="nav-container">
+    <div class="nav-logo">
+        <div class="crosshair">
+            <img src="{{ url_for('static', filename='assets/mole.svg') }}" alt="Whack-a-Mole" class="logo-mole">
+        </div>
+    </div>
     <div class="nav-toggle">Menu</div>
     <div class="nav-links">
         <a href="{{ url_for('index') }}">Game</a>
