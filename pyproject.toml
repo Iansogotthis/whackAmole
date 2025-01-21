@@ -1,6 +1,6 @@
 
 [tool.poetry]
-name = "."
+name = "whackamole"
 version = "0.1.0"
 description = ""
 authors = ["Ian Mount mount88ian@gmail.com"]
