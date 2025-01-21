@@ -1,175 +1,158 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container">
-    <div class="content-wrapper">
-        <div class="profile-main">
-            <h1>Find Friends</h1>
 
-            <!-- Search Section -->
-            <div class="search-section">
-        <input type="text" id="searchInput" placeholder="Search by username..." 
-               oninput="debounceSearch(this.value)">
-    </div>
-
-    <!-- Search Results -->
-    <div id="searchResults" class="search-results"></div>
-
-    <!-- Friends List -->
-    <div class="friends-section">
-        <h2>My Friends</h2>
-        <div id="friendsList" class="friends-list"></div>
-    </div>
-</div>
-
-<script>
-let debounceTimeout;
-
-function debounceSearch(query) {
-    clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => performSearch(query), 300);
-}
-
-async function performSearch(query) {
-    if (query.length < 2) {
-        document.getElementById('searchResults').innerHTML = '';
-        return;
-    }
-
-    try {
-        const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
-        const users = await response.json();
-
-        document.getElementById('searchResults').innerHTML = users.map(user => `
-            <div class="user-card">
-                <div class="user-info">
-                    <span class="username">${user.username}</span>
-                    <span class="email">${user.email}</span>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Friends - Whack-a-Mole</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="nav-container">
+        <div class="nav-logo">
+            <a href="{{ url_for('index') }}" class="logo-link">
+                <div class="crosshair-container">
+                    <img src="{{ url_for('static', filename='assets/mole.svg') }}" alt="Whack-a-Mole" class="logo-mole">
+                    <div class="crosshair-horizontal"></div>
+                    <div class="crosshair-vertical"></div>
                 </div>
-                <button onclick="addFriend('${user.username}')" class="add-friend-btn">
-                    Add Friend
-                </button>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Search failed:', error);
-    }
-}
-
-async function addFriend(username) {
-    try {
-        const response = await fetch(`/add_friend/${username}`, { 
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            await loadFriends();
-            alert(`Friend request sent to ${username}`);
-        }
-    } catch (error) {
-        console.error('Failed to add friend:', error);
-    }
-}
-
-async function loadFriends() {
-    try {
-        const response = await fetch('/get_friends_list');
-        const friends = await response.json();
-
-        document.getElementById('friendsList').innerHTML = friends.map(friend => `
-            <div class="friend-card">
-                <span class="friend-name">${friend.username}</span>
-                <div class="friend-actions">
-                    <button onclick="location.href='/profile/${friend.username}'">
-                        Profile
-                    </button>
-                    <button onclick="location.href='/chat/${friend.id}'">
-                        Chat
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Failed to load friends:', error);
-    }
-}
-
-// Load friends on page load
-document.addEventListener('DOMContentLoaded', loadFriends);
-</script>
-
-<style>
-.search-section {
-    margin: 20px 0;
-    padding: 0 20px;
-}
-
-#searchInput {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-}
-
-.search-results {
-    padding: 0 20px;
-}
-
-.user-card, .friend-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    margin: 10px 0;
-    background: #f5f5f5;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.username {
-    font-weight: bold;
-    font-size: 16px;
-}
-
-.email {
-    color: #666;
-    font-size: 14px;
-    margin-top: 4px;
-}
-
-.friend-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.friends-section {
-    padding: 20px;
-}
-
-button {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 4px;
-    background: #0066cc;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s;
-}
-
-button:hover {
-    background: #0052a3;
-}
-</style>
+                <span class="logo-text">Whack-a-Mole</span>
+            </a>
+        </div>
+        <div class="nav-toggle">Menu</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Game</a>
+            <a href="{{ url_for('forum') }}">Forum</a>
+            <a href="{{ url_for('search') }}">Search Players</a>
+            <a href="{{ url_for('get_leaderboard', difficulty='easy') }}">Leaderboard</a>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('profile', username=current_user.username) }}">Profile</a>
+            <a href="{{ url_for('chat') }}">Chat</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
         </div>
     </div>
-</div>
-{% endblock %}
+    
+    <main class="search-container">
+        <h1>Find Friends</h1>
+        <div class="search-box">
+            <input type="text" id="userSearch" placeholder="Search for users..." oninput="searchUsers()">
+        </div>
+        
+        <div id="searchResults" class="search-results"></div>
+        
+        <div class="friends-list-section">
+            <h2>Your Friends</h2>
+            <div id="friendsList" class="friends-feed"></div>
+        </div>
+    </main>
+
+    <!-- User Profile Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalUsername"></h2>
+            <div id="modalActions">
+                <button id="friendRequestBtn" class="action-btn"></button>
+                <button onclick="showEmojiModal()" class="action-btn">Send Greeting</button>
+                <button class="close-btn">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emoji Modal -->
+    <div id="emojiModal" class="modal">
+        <div class="modal-content">
+            <h3>Send a Greeting</h3>
+            <div class="emoji-grid">
+                <button onclick="sendEmoji('🖐️')" class="emoji-btn">🖐️ High Five</button>
+                <button onclick="sendEmoji('👊')" class="emoji-btn">👊 Fist Bump</button>
+                <button onclick="sendEmoji('😉')" class="emoji-btn">😉 Wink</button>
+                <button onclick="sendEmoji('😊')" class="emoji-btn">😊 Smile</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load friends list on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFriendsList();
+        });
+
+        async function loadFriendsList() {
+            const response = await fetch('/get_friends_list');
+            const friends = await response.json();
+            displayFriendsList(friends);
+        }
+
+        function displayFriendsList(friends) {
+            const friendsList = document.getElementById('friendsList');
+            friendsList.innerHTML = friends.map(friend => `
+                <div class="friend-card">
+                    <i class="fas fa-user-circle"></i>
+                    <h3>${friend.username}</h3>
+                </div>
+            `).join('');
+        }
+
+        async function searchUsers() {
+            const query = document.getElementById('userSearch').value;
+            if (query.length < 2) return;
+
+            const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
+            const users = await response.json();
+            displaySearchResults(users);
+        }
+
+        function displaySearchResults(users) {
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = users.map(user => `
+                <div class="friend-card">
+                    <i class="fas fa-user-circle"></i>
+                    <h3>${user.username}</h3>
+                    <div class="friend-actions">
+                        <button onclick="showUserModal('${user.username}')" class="action-btn">View Profile</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showUserModal(username) {
+            const modal = document.getElementById('userModal');
+            document.getElementById('modalUsername').textContent = username;
+            document.getElementById('friendRequestBtn').textContent = 'Send Friend Request';
+            document.getElementById('friendRequestBtn').onclick = () => sendFriendRequest(username);
+            modal.style.display = 'block';
+        }
+
+        function showEmojiModal() {
+            document.getElementById('userModal').style.display = 'none';
+            document.getElementById('emojiModal').style.display = 'block';
+        }
+
+        async function sendFriendRequest(username) {
+            await fetch(`/add_friend/${username}`, { method: 'POST' });
+            document.getElementById('userModal').style.display = 'none';
+            loadFriendsList();
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Close button functionality
+        document.querySelectorAll('.close, .close-btn').forEach(element => {
+            element.onclick = function() {
+                this.closest('.modal').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
