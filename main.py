@@ -1,7 +1,8 @@
+
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from whackamole.app import app, db, User, ForumPost, HighScore, ChatMessage
+from app import app, db, User, ForumPost, HighScore, ChatMessage
 from flask_login import LoginManager
 
 login_manager = LoginManager()
@@ -18,10 +19,6 @@ def load_user(user_id):
 @login_required
 def game():
     return render_template('index.html')
-
-
-
-
 
 
 @app.route("/send_friend_request/<int:user_id>", methods=['POST'])
