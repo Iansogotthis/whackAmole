@@ -383,11 +383,55 @@ def find_friends():
         return jsonify([])
     return render_template('find_friends.html')
 
+@app.route("/get_friend_requests")
+@login_required
+def get_friend_requests():
+    received = User.query.join(
+        friends, 
+        (friends.c.user_id == User.id) & (friends.c.friend_id == current_user.id)
+    ).all()
+    
+    sent = User.query.join(
+        friends,
+        (friends.c.user_id == current_user.id) & (friends.c.friend_id == User.id)
+    ).all()
+    
+    return jsonify({
+        "received": [{"username": user.username} for user in received],
+        "sent": [{"username": user.username} for user in sent]
+    })
+
+@app.route("/get_friends_list")
+@login_required
+def get_friends_list():
+    friends_list = current_user.friends_list.all()
+    return jsonify([{
+        "id": friend.id,
+        "username": friend.username
+    } for friend in friends_list])
+
+@app.route("/search_users")
+@login_required
+def search_users():
+    query = request.args.get('query', '')
+    if len(query) < 2:
+        return jsonify([])
+        
+    users = User.query.filter(
+        (User.username.ilike(f'%{query}%')) | 
+        (User.email.ilike(f'%{query}%'))
+    ).all()
+    
+    return jsonify([{
+        "username": user.username,
+        "email": user.email
+    } for user in users if user != current_user])
+
 @app.route("/send_emoji", methods=['POST'])
 @login_required
 def send_emoji():
     data = request.json
-    recipient = User.query.get_or_404(data['recipient_id'])
+    recipient = User.query.filter_by(username=data['recipient_username']).first_or_404()
     emoji = data['emoji']
     message = ChatMessage(
         sender_id=current_user.id,

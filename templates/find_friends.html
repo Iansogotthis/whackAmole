@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block content %}
 <div class="profile-main">
@@ -5,108 +6,168 @@
         <h1>Find Friends</h1>
     </section>
 
-    <div class="search-box">
-        <input type="text" id="friend-search" placeholder="Search by username or email..." onkeyup="searchFriends(this.value)">
-        <button onclick="searchFriends(document.getElementById('friend-search').value)">
-            <i class="fas fa-search"></i>
-        </button>
+    <!-- Friend Requests Section -->
+    <div class="requests-section">
+        <h2>Friend Requests</h2>
+        <div id="received-requests" class="requests-grid">
+            <!-- Populated by JavaScript -->
+        </div>
+        
+        <h2>Sent Requests</h2>
+        <div id="sent-requests" class="requests-grid">
+            <!-- Populated by JavaScript -->
+        </div>
     </div>
 
-    <div id="search-results" class="friends-grid"></div>
+    <!-- Friends List Section -->
+    <div class="friends-list-section">
+        <h2>My Friends</h2>
+        <div id="friends-list" class="friends-feed">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="search-box">
+            <input type="text" id="friend-search" placeholder="Search by username or email..." onkeyup="searchUsers(this.value)">
+            <button onclick="searchUsers(document.getElementById('friend-search').value)">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        <div id="search-results" class="search-results"></div>
+    </div>
+</div>
+
+<!-- User Profile Modal -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modalUsername"></h2>
+        <div class="modal-actions">
+            <button onclick="sendFriendRequest()" class="action-btn">Send Friend Request</button>
+            <button onclick="showGreetingOptions()" class="action-btn">Send Greeting</button>
+            <button onclick="closeModal()" class="action-btn">Back</button>
+        </div>
+        <div id="greetingOptions" class="emoji-grid" style="display: none;">
+            <button onclick="sendEmoji('👍')" class="emoji-btn">👍 Thumbs Up</button>
+            <button onclick="sendEmoji('✌️')" class="emoji-btn">✌️ Peace</button>
+            <button onclick="sendEmoji('😉')" class="emoji-btn">😉 Wink</button>
+            <button onclick="sendEmoji('😊')" class="emoji-btn">😊 Smile</button>
+            <button onclick="sendEmoji('😢')" class="emoji-btn">😢 Sad</button>
+        </div>
+    </div>
 </div>
 
 <script>
-async function searchFriends(query) {
-    if (query.length < 2) {
-        document.getElementById('search-results').innerHTML = '';
-        return;
-    }
+let selectedUser = null;
 
-    try {
-        const response = await fetch(`/find_friends?query=${encodeURIComponent(query)}`, {
-            headers: {'X-Requested-With': 'XMLHttpRequest'}
-        });
-        const results = await response.json();
-        displayResults(results);
-    } catch (error) {
-        console.error('Search error:', error);
-    }
+async function loadFriendRequests() {
+    const response = await fetch('/get_friend_requests');
+    const data = await response.json();
+    
+    const receivedDiv = document.getElementById('received-requests');
+    receivedDiv.innerHTML = data.received.map(req => `
+        <div class="request-card">
+            <span>${req.username}</span>
+            <div class="request-actions">
+                <button onclick="respondToRequest('${req.username}', true)">Accept</button>
+                <button onclick="respondToRequest('${req.username}', false)">Decline</button>
+            </div>
+        </div>
+    `).join('');
+
+    const sentDiv = document.getElementById('sent-requests');
+    sentDiv.innerHTML = data.sent.map(req => `
+        <div class="request-card">
+            <span>${req.username}</span>
+            <button onclick="cancelRequest('${req.username}')">Cancel</button>
+        </div>
+    `).join('');
 }
 
-function displayResults(results) {
-    const resultsDiv = document.getElementById('search-results');
-    resultsDiv.innerHTML = results.map(user => `
-        <div class="friend-card">
-            <i class="fas fa-user-circle"></i>
-            <h3>${user.username}</h3>
-            <p>${user.email}</p>
-            <p>Games played: ${user.games_played}</p>
+async function loadFriendsList() {
+    const response = await fetch('/get_friends_list');
+    const friends = await response.json();
+    
+    document.getElementById('friends-list').innerHTML = friends.map(friend => `
+        <div class="friend-item">
+            <span>${friend.username}</span>
             <div class="friend-actions">
-                <button onclick="toggleFriend('${user.username}', this)" 
-                        class="btn ${user.is_friend ? 'btn-danger' : 'btn-success'}">
-                    ${user.is_friend ? 'Remove Friend' : 'Add Friend'}
+                <button onclick="location.href='/profile/${friend.username}'" title="View Profile">
+                    <i class="fas fa-home"></i>
                 </button>
-                ${user.is_friend ? `
-                <div class="emoji-grid">
-                    <button onclick="sendEmoji('${user.id}', '🖐️')" class="emoji-btn" title="High Five">🖐️</button>
-                    <button onclick="sendEmoji('${user.id}', '👊')" class="emoji-btn" title="Fist Bump">👊</button>
-                    <button onclick="sendEmoji('${user.id}', '😉')" class="emoji-btn" title="Wink">😉</button>
-                    <button onclick="sendEmoji('${user.id}', '😊')" class="emoji-btn" title="Smile">😊</button>
-                    <button onclick="sendEmoji('${user.id}', '😢')" class="emoji-btn" title="Sad">😢</button>
-                </div>
-                ` : ''}
+                <button onclick="location.href='/chat/${friend.id}'" title="Chat">
+                    <i class="fas fa-comment"></i>
+                </button>
             </div>
         </div>
     `).join('');
 }
 
-async function sendEmoji(userId, emoji) {
-    try {
-        const response = await fetch('/send_emoji', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                recipient_id: userId,
-                emoji: emoji
-            })
-        });
-        if (response.ok) {
-            alert(`Sent ${emoji}!`);
-        }
-    } catch (error) {
-        console.error('Error sending emoji:', error);
+async function searchUsers(query) {
+    if (query.length < 2) {
+        document.getElementById('search-results').innerHTML = '';
+        return;
     }
+
+    const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
+    const users = await response.json();
+    
+    document.getElementById('search-results').innerHTML = users.map(user => `
+        <div class="search-result-card" onclick="showUserProfile('${user.username}')">
+            <i class="fas fa-user-circle"></i>
+            <div class="user-info">
+                <h3>${user.username}</h3>
+                <p>${user.email}</p>
+            </div>
+        </div>
+    `).join('');
 }
 
-async function toggleFriend(username, button) {
-    const action = button.classList.contains('btn-danger') ? 'remove_friend' : 'add_friend';
-    try {
-        const response = await fetch(`/${action}/${username}`, {
-            method: 'POST'
-        });
-        if (response.ok) {
-            button.classList.toggle('btn-danger');
-            button.classList.toggle('btn-success');
-            button.textContent = button.classList.contains('btn-danger') ? 'Remove Friend' : 'Add Friend';
-
-            if (action === 'add_friend') {
-                const parent = button.parentElement;
-                parent.innerHTML += `
-                    <div class="emoji-grid">
-                        <button onclick="sendEmoji('${username}', '🖐️')" class="emoji-btn" title="High Five">🖐️</button>
-                        <button onclick="sendEmoji('${username}', '👊')" class="emoji-btn" title="Fist Bump">👊</button>
-                        <button onclick="sendEmoji('${username}', '😉')" class="emoji-btn" title="Wink">😉</button>
-                        <button onclick="sendEmoji('${username}', '😊')" class="emoji-btn" title="Smile">😊</button>
-                        <button onclick="sendEmoji('${username}', '😢')" class="emoji-btn" title="Sad">😢</button>
-                    </div>
-                `;
-            }
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
+function showUserProfile(username) {
+    selectedUser = username;
+    document.getElementById('modalUsername').textContent = username;
+    document.getElementById('greetingOptions').style.display = 'none';
+    document.getElementById('userModal').style.display = 'block';
 }
+
+function showGreetingOptions() {
+    document.getElementById('greetingOptions').style.display = 'grid';
+}
+
+async function sendEmoji(emoji) {
+    if (!selectedUser) return;
+    
+    await fetch('/send_emoji', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            recipient_username: selectedUser,
+            emoji: emoji
+        })
+    });
+    
+    closeModal();
+}
+
+function closeModal() {
+    document.getElementById('userModal').style.display = 'none';
+    selectedUser = null;
+}
+
+async function sendFriendRequest() {
+    if (!selectedUser) return;
+    
+    await fetch(`/add_friend/${selectedUser}`, { method: 'POST' });
+    closeModal();
+    loadFriendRequests();
+}
+
+// Load initial data
+document.addEventListener('DOMContentLoaded', () => {
+    loadFriendRequests();
+    loadFriendsList();
+});
 </script>
 {% endblock %}

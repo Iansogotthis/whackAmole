@@ -26,12 +26,12 @@ body {
         padding: 5px;
         border-radius: 10px;
     }
-    
+
     #score, #time {
         font-size: 1em;
         margin: 5px 0;
     }
-    
+
     .difficulty-button {
         padding: 8px 15px;
         margin: 5px 2px;
@@ -103,7 +103,6 @@ button:disabled {
 
 .emoji-reactions button:hover {
     transform: scale(1.2);
-}owed;
 }
 
 .chat-section {
@@ -165,7 +164,6 @@ button:disabled {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-}owed;
 }
 
 #difficulty-selection {
@@ -261,7 +259,15 @@ h1, h2 {
 
 .leaderboard-table tr:hover {
     background-color: rgba(0, 0, 0, 0.1);
-}x;
+}
+
+.mole {
+    width: 80px;
+    height: 80px;
+    background-image: url('mole.png'); /* Replace with your mole image */
+    background-size: cover;
+    position: absolute;
+    cursor: pointer;
     margin-left: auto;
     margin-right: auto;
 }
@@ -482,6 +488,20 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
     margin-top: 1rem;
+}
+
+.friend-card,
+.request-card,
+.search-result-card,
+.friend-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .friend-card {
@@ -931,4 +951,91 @@ body {
 
 .auth-redirect a:hover {
     text-decoration: underline;
+}
+
+.requests-section,
+.friends-list-section,
+.search-section {
+    margin: 20px 0;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.requests-grid,
+.friends-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.friend-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.friend-actions button {
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    background: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.emoji-btn {
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    background: #f0f0f0;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+    font-size: 1.5em;
 }
