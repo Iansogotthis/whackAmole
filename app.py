@@ -428,6 +428,11 @@ def get_friends_list():
         "username": friend.username
     } for friend in friends_list])
 
+@app.route("/search")
+@login_required
+def search():
+    return render_template('search.html')
+
 @app.route("/search_users")
 @login_required
 def search_users():
