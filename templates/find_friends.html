@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 {% block content %}
 <div class="profile-main">
@@ -12,7 +11,7 @@
         <div id="received-requests" class="requests-grid">
             <!-- Populated by JavaScript -->
         </div>
-        
+
         <h2>Sent Requests</h2>
         <div id="sent-requests" class="requests-grid">
             <!-- Populated by JavaScript -->
@@ -65,7 +64,7 @@ let selectedUser = null;
 async function loadFriendRequests() {
     const response = await fetch('/get_friend_requests');
     const data = await response.json();
-    
+
     const receivedDiv = document.getElementById('received-requests');
     receivedDiv.innerHTML = data.received.map(req => `
         <div class="request-card">
@@ -89,7 +88,7 @@ async function loadFriendRequests() {
 async function loadFriendsList() {
     const response = await fetch('/get_friends_list');
     const friends = await response.json();
-    
+
     document.getElementById('friends-list').innerHTML = friends.map(friend => `
         <div class="friend-item">
             <span>${friend.username}</span>
@@ -113,7 +112,7 @@ async function searchUsers(query) {
 
     const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
     const users = await response.json();
-    
+
     document.getElementById('search-results').innerHTML = users.map(user => `
         <div class="search-result-card" onclick="showUserProfile('${user.username}')">
             <i class="fas fa-user-circle"></i>
@@ -138,7 +137,7 @@ function showGreetingOptions() {
 
 async function sendEmoji(emoji) {
     if (!selectedUser) return;
-    
+
     await fetch('/send_emoji', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -147,7 +146,7 @@ async function sendEmoji(emoji) {
             emoji: emoji
         })
     });
-    
+
     closeModal();
 }
 
@@ -158,7 +157,7 @@ function closeModal() {
 
 async function sendFriendRequest() {
     if (!selectedUser) return;
-    
+
     await fetch(`/add_friend/${selectedUser}`, { method: 'POST' });
     closeModal();
     loadFriendRequests();
@@ -170,4 +169,5 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFriendsList();
 });
 </script>
+<script src="https://auth.util.repl.co/script.js" authed="location.reload()"></script>
 {% endblock %}
