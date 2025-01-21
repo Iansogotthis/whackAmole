@@ -1,0 +1,60 @@
+ailed to load resource: net::ERR_NAME_NOT_RESOLVED
+Explanation
+
+The browser error Failed to load resource: net::ERR_NAME_NOT_RESOLVED means the browser can't find the server or hostname you're trying to connect to. It's a DNS resolution error, indicating that the browser is unable to translate the domain name (e.g., www.example.com) into an IP address.
+
+Here's a breakdown of the common causes and how to troubleshoot them:
+
+Common Causes:
+
+Incorrect URL: You might have typed the URL wrong in the address bar. Even a small typo can prevent the browser from finding the correct server.
+Solution: Double-check the URL for any typos.
+DNS Problems: The Domain Name System (DNS) is what translates human-readable domain names into IP addresses. If there's an issue with your DNS settings, the browser won't be able to look up the correct IP.
+Common Sub-causes:
+DNS Server Down: The DNS server your computer is using might be experiencing an outage.
+Incorrect DNS Server: Your computer might be configured to use an invalid or outdated DNS server.
+Local DNS Cache: Your computer's DNS cache might contain outdated or incorrect information.
+Solutions:
+Restart Router/Modem: Power cycling your router/modem can often resolve temporary DNS issues.
+Flush DNS Cache: Clearing your local DNS cache can fix issues with outdated DNS information. This is often done through your operating system's command line.
+Change DNS Server: Switch to a different DNS server, such as Google's public DNS servers (8.8.8.8 and 8.8.4.4).
+Check Your ISP: If the problem is widespread, there might be a problem with your internet service provider (ISP).
+Check DNS Records: Check the DNS records for the website you are trying to access to ensure that the correct IP address is associated with the domain name.
+Firewall/Antivirus: Your firewall or antivirus software might be blocking the connection to the DNS server.
+Solution: Check your firewall and antivirus settings to see if they are interfering with DNS resolution.
+Local Host File: There might be a problem with your local host file, causing name resolution problems.
+Solution: Open the host file on your computer and check that it does not have an entry that has been set up incorrectly.
+Incorrect Network Configuration: Your computer's network settings might be misconfigured.
+Solution: Check your network settings and ensure they are correct.
+Internet Connectivity The most common issue is internet connectivity itself, if you have no internet, then it will never be able to find a domain.
+Solution: Check if you have any connection to the internet. If not then check your internet connection and resolve it first.
+Troubleshooting Steps:
+
+Check the URL: Make sure you typed the URL correctly.
+Restart Router/Modem: Power cycle your router/modem.
+Flush DNS Cache: Clear your local DNS cache.
+Change DNS Servers: Try using a different DNS server.
+Check internet connectivity: Make sure you have internet connectivity.
+Check DNS Records: Make sure the DNS records are set up correctly.
+Check Firewall/Antivirus: Temporarily disable your firewall and antivirus to see if it's causing the problem.
+Check for typos: Make sure there are no typos.
+Check local host file: Make sure there are no issues there.
+How to Flush DNS Cache (Windows, macOS, Linux):
+
+Windows: Open the command prompt and type ipconfig /flushdns.
+macOS: Open a terminal and type sudo dscacheutil -flushdns.
+Linux: There are various commands to flush DNS, but systemd-resolve --flush-cache is common.
+How to Change DNS Server (Windows, macOS, Linux):
+
+Windows: Go to Control Panel -> Network and Internet -> Network Connections -> Properties -> IPv4 -> Properties -> Use the following DNS server address -> Select "Use the following DNS server address" and enter your DNS server IP address.
+macOS: Go to "Network Settings" -> "Network Connections" -> "Network Connections" -> Select "Use the following DNS server address" and enter your DNS server IP address.
+Linux: Your network settings manager (e.g., NetworkManager) will allow you to change settings. Often this is found in the system settings area of your operating system.
+When to Contact Support:
+
+If you've tried all the troubleshooting steps and are still having problems, contact your ISP or domain hosting provider for support. If it is an internal issue, you may need to ask for internal IT support.
+
+By understanding the causes of this error and following a systematic approach to troubleshooting, you should be able to resolve the net::ERR_NAME_NOT_RESOLVED error and get back online.
+
+Data used to understand this message
+Use search instead
+AI tools may generate inaccurate info that doesn't represent Google's views. Data sent to Google may be seen by human reviewers to improve this feature. Open settings or learn more
