@@ -1,7 +1,10 @@
+
 {% extends "base.html" %}
 {% block content %}
 <div class="profile-main">
     <h1>Find Friends</h1>
+
+    <script src="https://replit.com/public/js/repl-auth-v2.js" crossorigin="anonymous"></script>
 
     <!-- Search Section -->
     <div class="search-section">
@@ -22,6 +25,8 @@
 <script>
 let debounceTimeout;
 
+const authToken = window.ReplitBridge ? await window.ReplitBridge.getToken() : null;
+
 function debounceSearch(query) {
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => performSearch(query), 300);
@@ -34,7 +39,11 @@ async function performSearch(query) {
     }
 
     try {
-        const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
+        const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
         const users = await response.json();
 
         document.getElementById('searchResults').innerHTML = users.map(user => `
@@ -57,7 +66,10 @@ async function addFriend(username) {
     try {
         const response = await fetch(`/add_friend/${username}`, { 
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            }
         });
 
         if (response.ok) {
@@ -71,7 +83,11 @@ async function addFriend(username) {
 
 async function loadFriends() {
     try {
-        const response = await fetch('/get_friends_list');
+        const response = await fetch('/get_friends_list', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
         const friends = await response.json();
 
         document.getElementById('friendsList').innerHTML = friends.map(friend => `
