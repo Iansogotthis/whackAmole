@@ -23,9 +23,15 @@ def create_app():
     app.config.from_object(Config)
     CORS(app, resources={
         r"/*": {
-            "origins": ["https://replit.com", "https://*.replit.dev"],
+            "origins": [
+                "https://replit.com",
+                "https://*.replit.dev",
+                "https://auth.util.repl.co",
+                "https://*.repl.co"
+            ],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
+            "allow_headers": ["Content-Type", "Authorization", "X-Replit-User-Id", "X-Replit-User-Name", "X-Replit-User-Roles"],
+            "supports_credentials": True
         }
     })
 
