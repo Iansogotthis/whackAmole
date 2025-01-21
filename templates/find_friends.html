@@ -95,6 +95,10 @@
                 <div class="friend-card">
                     <i class="fas fa-user-circle"></i>
                     <h3>${friend.username}</h3>
+                    <div class="friend-actions">
+                        <a href="/chat/${friend.id}" class="action-btn"><i class="fas fa-comment"></i> Chat</a>
+                        <a href="/profile/${friend.username}" class="action-btn"><i class="fas fa-home"></i> Profile</a>
+                    </div>
                 </div>
             `).join('');
         }

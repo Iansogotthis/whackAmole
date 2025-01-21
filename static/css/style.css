@@ -567,8 +567,28 @@ body {
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    cursor: pointer;
     transition: transform 0.2s;
+}
+
+.friend-card .friend-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.friend-card .action-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background: #4CAF50;
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.friend-card .action-btn:hover {
+    background: #45a049;
 }
 
 .friend-card:hover {
