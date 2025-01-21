@@ -1,4 +1,6 @@
 import logging
+import random
+import string
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -486,6 +488,31 @@ def send_emoji():
     db.session.add(message)
     db.session.commit()
     return jsonify({"status": "success"})
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form['email']
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            # Generate a random temporary password
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+            user.set_password(temp_password)
+            db.session.commit()
+            
+            # Here you would typically send an email with the temp password
+            # For demo purposes, we'll just flash it
+            flash(f'Your temporary password is: {temp_password}')
+            return redirect(url_for('login'))
+        
+        flash('Email not found')
+        return redirect(url_for('reset_password'))
+    
+    return render_template('reset_password.html')
 
 @app.route("/logout")
 @login_required
