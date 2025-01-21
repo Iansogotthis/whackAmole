@@ -128,9 +128,33 @@
             <i class="fas fa-user-circle"></i>
             <h3>{{ friend.username }}</h3>
             <p>Games: {{ friend.games_played }}</p>
+            {% if user == current_user %}
             <div class="friend-actions">
                 <button onclick="sendGreeting('{{ friend.username }}')">Send Greeting</button>
             </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</article>
+
+<article class="comments-section">
+    <h2>Comments</h2>
+    {% if user != current_user %}
+    <form class="comment-form" action="{{ url_for('add_comment', username=user.username) }}" method="POST">
+        <textarea name="content" placeholder="Write a comment..." required></textarea>
+        <button type="submit" class="btn btn-primary">Post Comment</button>
+    </form>
+    {% endif %}
+    
+    <div class="comments-list">
+        {% for comment in comments %}
+        <div class="comment">
+            <div class="comment-header">
+                <strong>{{ comment.author.username }}</strong>
+                <span>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            <p>{{ comment.content }}</p>
         </div>
         {% endfor %}
     </div>

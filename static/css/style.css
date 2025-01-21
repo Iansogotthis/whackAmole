@@ -1116,3 +1116,41 @@ body {
     cursor: pointer;
     font-size: 1.5em;
 }
+
+.comments-section {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.comment-form {
+    margin-bottom: 1rem;
+}
+
+.comment-form textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    min-height: 80px;
+    resize: vertical;
+}
+
+.comments-list .comment {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+.comment-header strong {
+    color: #333;
+}

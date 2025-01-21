@@ -146,6 +146,16 @@ class ChatMessage(db.Model):
     sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
     receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_messages')
 
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    profile_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
+    author = db.relationship('User', foreign_keys=[author_id], backref='comments_made')
+    profile = db.relationship('User', foreign_keys=[profile_id], backref='profile_comments')
+
 class ForumPost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -247,7 +257,23 @@ def profile(username):
             ((ChatMessage.sender_id == current_user.id) & (ChatMessage.receiver_id == user.id)) |
             ((ChatMessage.sender_id == user.id) & (ChatMessage.receiver_id == current_user.id))
         ).order_by(ChatMessage.sent_at.asc()).all()
-    return render_template("profile.html", user=user, messages=messages, HighScore=HighScore)
+    comments = Comment.query.filter_by(profile_id=user.id).order_by(Comment.created_at.desc()).all()
+    return render_template("profile.html", user=user, messages=messages, comments=comments, HighScore=HighScore)
+
+@app.route("/add_comment/<username>", methods=['POST'])
+@login_required
+def add_comment(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    content = request.form.get('content', '').strip()
+    if content:
+        comment = Comment(
+            content=content,
+            author_id=current_user.id,
+            profile_id=user.id
+        )
+        db.session.add(comment)
+        db.session.commit()
+    return redirect(url_for('profile', username=username))
 
 @app.route("/add_friend/<username>", methods=['POST'])
 @login_required
