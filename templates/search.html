@@ -1,18 +1,116 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Search Friends</title>
-</head>
-<body>
-    <h1>Find Friends</h1>
-    <form action="find_friends.html" method="GET">
-        <input type="text" name="search" placeholder="Enter friend's name" required>
-        <input type="submit" value="Search">
-    </form>
-    
-    <!-- Results will be displayed here -->
-    <div id="results">
-        <!-- Results will be dynamically inserted -->
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="content-wrapper">
+        <div class="profile-main">
+            <h1>Search Players</h1>
+            
+            <!-- Search Section -->
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="Search by username..." 
+                       oninput="debounceSearch(this.value)">
+            </div>
+
+            <!-- Search Results -->
+            <div id="searchResults" class="search-results"></div>
+        </div>
     </div>
-</body>
-</html>
+</div>
+
+<script>
+let debounceTimeout;
+
+function debounceSearch(query) {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => performSearch(query), 300);
+}
+
+async function performSearch(query) {
+    if (query.length < 2) {
+        document.getElementById('searchResults').innerHTML = '';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
+        const users = await response.json();
+
+        document.getElementById('searchResults').innerHTML = users.map(user => `
+            <div class="user-card">
+                <div class="user-info">
+                    <span class="username">${user.username}</span>
+                    <span class="email">${user.email}</span>
+                </div>
+                <button onclick="location.href='/profile/${user.username}'" class="view-profile-btn">
+                    View Profile
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Search failed:', error);
+    }
+}
+</script>
+
+<style>
+.search-section {
+    margin: 20px 0;
+    padding: 0 20px;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.search-results {
+    padding: 0 20px;
+}
+
+.user-card {
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f5f5f5;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.username {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.email {
+    color: #666;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.view-profile-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    background: #0066cc;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.view-profile-btn:hover {
+    background: #0052a3;
+}
+</style>
+{% endblock %}
