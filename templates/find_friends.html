@@ -1,120 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="profile-main">
-    <section class="profile-header">
-        <h1>Find Friends</h1>
-    </section>
+    <h1>Find Friends</h1>
 
     <!-- Search Section -->
     <div class="search-section">
-        <div class="search-box">
-            <input type="text" id="friend-search" placeholder="Search by username or email..." onkeyup="searchUsers(this.value)">
-            <button onclick="searchUsers(document.getElementById('friend-search').value)">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-        <div id="search-results" class="search-results"></div>
+        <input type="text" id="searchInput" placeholder="Search by username..." 
+               oninput="debounceSearch(this.value)">
     </div>
 
-    <!-- Friend Requests Section -->
-    <div class="requests-section">
-        <h2>Friend Requests</h2>
-        <div id="received-requests" class="requests-grid">
-            <!-- Populated by JavaScript -->
-        </div>
+    <!-- Search Results -->
+    <div id="searchResults" class="search-results"></div>
 
-        <h2>Sent Requests</h2>
-        <div id="sent-requests" class="requests-grid">
-            <!-- Populated by JavaScript -->
-        </div>
-    </div>
-
-    <!-- Friends List Section -->
-    <div class="friends-list-section">
+    <!-- Friends List -->
+    <div class="friends-section">
         <h2>My Friends</h2>
-        <div id="friends-list" class="friends-feed">
-            <!-- Populated by JavaScript -->
-        </div>
-    </div>
-</div>
-
-<!-- User Profile Modal -->
-<div id="userModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h2 id="modalUsername"></h2>
-        <div class="modal-actions">
-            <button onclick="sendFriendRequest()" class="action-btn">Send Friend Request</button>
-            <button onclick="showGreetingOptions()" class="action-btn">Send Greeting</button>
-            <button onclick="closeModal()" class="action-btn">Back</button>
-        </div>
-        <div id="greetingOptions" class="emoji-grid" style="display: none;">
-            <button onclick="sendEmoji('👍')" class="emoji-btn">👍</button>
-            <button onclick="sendEmoji('✌️')" class="emoji-btn">✌️</button>
-            <button onclick="sendEmoji('😉')" class="emoji-btn">😉</button>
-            <button onclick="sendEmoji('😊')" class="emoji-btn">😊</button>
-            <button onclick="sendEmoji('😢')" class="emoji-btn">😢</button>
-        </div>
+        <div id="friendsList" class="friends-list"></div>
     </div>
 </div>
 
 <script>
-let selectedUser = null;
+let debounceTimeout;
 
-async function loadFriendRequests() {
-    try {
-        const response = await fetch('/get_friend_requests');
-        const data = await response.json();
-
-        const receivedDiv = document.getElementById('received-requests');
-        receivedDiv.innerHTML = data.received.map(req => `
-            <div class="request-card">
-                <span>${req.username}</span>
-                <div class="request-actions">
-                    <button onclick="respondToRequest('${req.username}', true)">Accept</button>
-                    <button onclick="respondToRequest('${req.username}', false)">Decline</button>
-                </div>
-            </div>
-        `).join('');
-
-        const sentDiv = document.getElementById('sent-requests');
-        sentDiv.innerHTML = data.sent.map(req => `
-            <div class="request-card">
-                <span>${req.username}</span>
-                <button onclick="cancelRequest('${req.username}')">Cancel</button>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading friend requests:', error);
-    }
+function debounceSearch(query) {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => performSearch(query), 300);
 }
 
-async function loadFriendsList() {
-    try {
-        const response = await fetch('/get_friends_list');
-        const friends = await response.json();
-
-        document.getElementById('friends-list').innerHTML = friends.map(friend => `
-            <div class="friend-item">
-                <span>${friend.username}</span>
-                <div class="friend-actions">
-                    <button onclick="location.href='/profile/${friend.username}'" title="View Profile">
-                        <i class="fas fa-home"></i>
-                    </button>
-                    <button onclick="location.href='/chat/${friend.id}'" title="Chat">
-                        <i class="fas fa-comment"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading friends list:', error);
-    }
-}
-
-async function searchUsers(query) {
+async function performSearch(query) {
     if (query.length < 2) {
-        document.getElementById('search-results').innerHTML = '';
+        document.getElementById('searchResults').innerHTML = '';
         return;
     }
 
@@ -122,76 +37,117 @@ async function searchUsers(query) {
         const response = await fetch(`/search_users?query=${encodeURIComponent(query)}`);
         const users = await response.json();
 
-        document.getElementById('search-results').innerHTML = users.map(user => `
-            <div class="search-result-card" onclick="showUserProfile('${user.username}')">
-                <i class="fas fa-user-circle"></i>
+        document.getElementById('searchResults').innerHTML = users.map(user => `
+            <div class="user-card">
                 <div class="user-info">
-                    <h3>${user.username}</h3>
-                    <p>${user.email}</p>
+                    <span class="username">${user.username}</span>
+                    <span class="email">${user.email}</span>
+                </div>
+                <button onclick="addFriend('${user.username}')" class="add-friend-btn">
+                    Add Friend
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Search failed:', error);
+    }
+}
+
+async function addFriend(username) {
+    try {
+        const response = await fetch(`/add_friend/${username}`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+            loadFriends();
+            alert(`Friend request sent to ${username}`);
+        }
+    } catch (error) {
+        console.error('Failed to add friend:', error);
+    }
+}
+
+async function loadFriends() {
+    try {
+        const response = await fetch('/get_friends_list');
+        const friends = await response.json();
+
+        document.getElementById('friendsList').innerHTML = friends.map(friend => `
+            <div class="friend-card">
+                <span class="friend-name">${friend.username}</span>
+                <div class="friend-actions">
+                    <button onclick="location.href='/profile/${friend.username}'">
+                        Profile
+                    </button>
+                    <button onclick="location.href='/chat/${friend.id}'">
+                        Chat
+                    </button>
                 </div>
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error searching users:', error);
+        console.error('Failed to load friends:', error);
     }
 }
 
-function showUserProfile(username) {
-    selectedUser = username;
-    document.getElementById('modalUsername').textContent = username;
-    document.getElementById('greetingOptions').style.display = 'none';
-    document.getElementById('userModal').style.display = 'block';
-}
-
-function closeModal() {
-    document.getElementById('userModal').style.display = 'none';
-    document.getElementById('greetingOptions').style.display = 'none';
-    selectedUser = null;
-}
-
-function showGreetingOptions() {
-    document.getElementById('greetingOptions').style.display = 'grid';
-}
-
-async function sendEmoji(emoji) {
-    if (!selectedUser) return;
-
-    try {
-        await fetch('/send_emoji', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                recipient_username: selectedUser,
-                emoji: emoji
-            })
-        });
-        closeModal();
-    } catch (error) {
-        console.error('Error sending emoji:', error);
-    }
-}
-
-async function sendFriendRequest() {
-    if (!selectedUser) return;
-
-    try {
-        await fetch(`/add_friend/${selectedUser}`, { method: 'POST' });
-        closeModal();
-        loadFriendRequests();
-    } catch (error) {
-        console.error('Error sending friend request:', error);
-    }
-}
-
-// Load initial data
-document.addEventListener('DOMContentLoaded', () => {
-    loadFriendRequests();
-    loadFriendsList();
-});
+// Load friends on page load
+document.addEventListener('DOMContentLoaded', loadFriends);
 </script>
-<script 
-    authed="location.reload()" 
-    src="https://replit.com/public/js/repl-auth-v2.js"
-    crossorigin="anonymous"
-></script>
+
+<style>
+.search-section {
+    margin: 20px 0;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.user-card, .friend-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.username {
+    font-weight: bold;
+}
+
+.email {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.friend-actions {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    padding: 5px 15px;
+    border: none;
+    border-radius: 4px;
+    background: #0066cc;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0052a3;
+}
+</style>
 {% endblock %}
