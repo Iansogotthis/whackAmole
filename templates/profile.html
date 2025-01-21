@@ -281,9 +281,33 @@ async function cancelFriendRequest(username) {
     showUserModal(username, false);
 }
 
-async function sendGreeting(username) {
-    await fetch(`/send_greeting/${username}`, { method: 'POST' });
-    alert(`Greeting sent to ${username}!`);
+function sendGreeting(username) {
+    selectedUsername = username;
+    document.getElementById('emojiModal').style.display = 'block';
+}
+
+async function sendEmoji(emoji) {
+    if (selectedUsername) {
+        try {
+            const response = await fetch('/send_emoji', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    recipient_username: selectedUsername,
+                    emoji: emoji
+                })
+            });
+            if (response.ok) {
+                document.getElementById('emojiModal').style.display = 'none';
+                alert('Greeting sent!');
+            }
+        } catch (error) {
+            console.error('Error sending emoji:', error);
+            alert('Failed to send greeting');
+        }
+    }
 }
 
 // Close modal when clicking the X or Close button
