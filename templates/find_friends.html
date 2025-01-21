@@ -1,11 +1,13 @@
 
 {% extends "base.html" %}
 {% block content %}
-<div class="profile-main">
-    <h1>Find Friends</h1>
-
-    <!-- Search Section -->
-    <div class="search-section">
+<div class="container">
+    <div class="content-wrapper">
+        <div class="profile-main">
+            <h1>Find Friends</h1>
+            
+            <!-- Search Section -->
+            <div class="search-section">
         <input type="text" id="searchInput" placeholder="Search by username..." 
                oninput="debounceSearch(this.value)">
     </div>
@@ -168,4 +170,7 @@ button:hover {
     background: #0052a3;
 }
 </style>
+        </div>
+    </div>
+</div>
 {% endblock %}
