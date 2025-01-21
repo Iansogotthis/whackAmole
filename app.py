@@ -174,6 +174,10 @@ def submit_score():
             score=data['score'],
             difficulty=data['difficulty']
         )
+        # Update user statistics
+        current_user.games_played += 1
+        current_user.total_score += data['score']
+        
         db.session.add(new_score)
         db.session.commit()
         app.logger.info(f"Score submitted successfully: {new_score.to_dict()}")

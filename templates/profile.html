@@ -74,17 +74,22 @@
                 <div class="stat-card">
                     <i class="fas fa-gamepad"></i>
                     <h3>Games Played</h3>
-                    <p>{{ user.games_played }}</p>
+                    <p class="stat-value">{{ user.games_played }}</p>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-trophy"></i>
                     <h3>Total Score</h3>
-                    <p>{{ user.total_score }}</p>
+                    <p class="stat-value">{{ user.total_score }}</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-star"></i>
+                    <h3>Average Score</h3>
+                    <p class="stat-value">{{ (user.total_score / user.games_played)|round if user.games_played > 0 else 0 }}</p>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-users"></i>
                     <h3>Friends</h3>
-                    <p>{{ user.friends_list.count() }}</p>
+                    <p class="stat-value">{{ user.friends_list.count() }}</p>
                 </div>
             </section>
 
